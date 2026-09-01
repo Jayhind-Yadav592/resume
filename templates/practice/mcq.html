@@ -200,12 +200,6 @@
         <div id="q-options-container" class="mt-3">
           <!-- Populated dynamically -->
         </div>
-
-        <!-- Instant Explanation Box -->
-        <div id="explanation-box" class="p-3 rounded-3 mt-3 d-none border">
-          <div class="fw-bold small mb-1" id="exp-title">💡 Explanation:</div>
-          <div class="small text-secondary" id="exp-text"></div>
-        </div>
       </div>
 
       <!-- Bottom Quiz Navigation Bar -->
@@ -215,9 +209,6 @@
         </button>
 
         <div class="d-flex align-items-center gap-2">
-          <button type="button" id="btn-check" onclick="checkCurrentAnswer()" class="btn btn-outline-custom btn-sm px-3">
-            <i class="bi bi-eye me-1"></i> Check Answer
-          </button>
           <button type="button" id="btn-next" onclick="nextQuestion()" class="btn btn-primary-custom btn-sm px-3.5">
             Next <i class="bi bi-arrow-right ms-1"></i>
           </button>
@@ -418,9 +409,6 @@
       codeBox.classList.add('d-none');
     }
 
-    // Explanation Box
-    document.getElementById('explanation-box').classList.add('d-none');
-
     // Options
     const optContainer = document.getElementById('q-options-container');
     optContainer.innerHTML = '';
@@ -454,35 +442,6 @@
   function selectOption(qIdx, oIdx) {
     userAnswers[qIdx] = oIdx;
     renderQuestion(qIdx);
-  }
-
-  function checkCurrentAnswer() {
-    const q = currentQuestions[currentIndex];
-    const expBox = document.getElementById('explanation-box');
-    const expText = document.getElementById('exp-text');
-
-    const selected = userAnswers[currentIndex];
-    if (selected === undefined) {
-      alert('Please select an option first.');
-      return;
-    }
-
-    // Highlight options
-    (q.options || []).forEach((_, oIdx) => {
-      const el = document.getElementById(`opt-card-${oIdx}`);
-      if (el) {
-        el.classList.remove('correct-answer', 'wrong-answer');
-        if (oIdx === q.correct_answer) {
-          el.classList.add('correct-answer');
-        } else if (oIdx === selected) {
-          el.classList.add('wrong-answer');
-        }
-      }
-    });
-
-    expText.textContent = q.explanation || 'Option evaluated successfully.';
-    expBox.className = selected === q.correct_answer ? 'p-3 rounded-3 mt-3 border bg-success-subtle text-success' : 'p-3 rounded-3 mt-3 border bg-danger-subtle text-danger';
-    expBox.classList.remove('d-none');
   }
 
   function nextQuestion() {

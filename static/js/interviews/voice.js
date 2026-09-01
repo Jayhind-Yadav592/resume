@@ -1,7 +1,7 @@
 /**
- * Voice Mode Engine for ResumeForge AI Mock Interview
- * Uses native Web Speech API (SpeechSynthesis & SpeechRecognition)
- * Features real-time Speech Intelligence: WPM (Words Per Minute) Pacing & Filler Word Tracking.
+ * ResumeForge AI — Ultra-Humanlike Conversational Voice Engine
+ * Uses Web Speech Synthesis & Recognition with Natural Voice Filtering,
+ * Tech Acronym Expansion, Pacing Intelligence, and Live Soundwave Equalizers.
  */
 
 (function () {
@@ -15,6 +15,7 @@
   let isRecording = false;
   let recognitionInstance = null;
   let preferredVoice = null;
+  let availableVoices = [];
   let silenceTimer = null;
   let transcriptBase = '';
   let speechStartTime = null;
@@ -22,11 +23,33 @@
 
   const FILLER_WORD_REGEX = /\b(um|uh|like|basically|actually|literally|you know|sort of|kind of)\b/gi;
 
+  // Technical pronunciation dictionary for natural speech
+  const TECH_PRONUNCIATION_MAP = [
+    [/\bAPI\b/g, 'A P I'],
+    [/\bAPIs\b/g, 'A P I s'],
+    [/\bREST\b/g, 'Rest'],
+    [/\bSQL\b/g, 'Sequel'],
+    [/\bNoSQL\b/g, 'No Sequel'],
+    [/\bPostgreSQL\b/gi, 'Postgres Q L'],
+    [/\bAWS\b/g, 'A W S'],
+    [/\bGCP\b/g, 'G C P'],
+    [/\bCI\/CD\b/gi, 'C I C D'],
+    [/\bDRF\b/g, 'Django REST Framework'],
+    [/\bUI\/UX\b/gi, 'U I U X'],
+    [/\bJSON\b/g, 'Jason'],
+    [/\bHTML\b/g, 'H T M L'],
+    [/\bCSS\b/g, 'C S S'],
+    [/\bJWT\b/g, 'J W T'],
+    [/\bDSA\b/g, 'D S A'],
+    [/\bWPM\b/g, 'Words Per Minute']
+  ];
+
   let micBtn = null;
   let voiceToggle = null;
   let voiceStatusLabel = null;
   let answerTextarea = null;
   let voiceSupportNotice = null;
+  let voiceSelectEl = null;
 
   function initVoiceMode() {
     micBtn = document.getElementById('btn-mic');
@@ -34,6 +57,7 @@
     voiceStatusLabel = document.getElementById('voice-recording-status');
     answerTextarea = document.getElementById('answer-input');
     voiceSupportNotice = document.getElementById('voice-support-notice');
+    voiceSelectEl = document.getElementById('interviewer-voice-select');
 
     const savedPref = localStorage.getItem('resumeforge_voice_mode');
     if (savedPref !== null) {
@@ -77,7 +101,55 @@
       }
     }
 
+    // Play subtle modern meeting enter chime
+    playJoinChime();
+
     updateVoiceUIState();
+  }
+
+  function playJoinChime() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+
+      // Note 1 (E5)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(659.25, now);
+      gain1.gain.setValueAtTime(0.08, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.35);
+
+      // Note 2 (G#5)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(830.61, now + 0.12);
+      gain2.gain.setValueAtTime(0.1, now + 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.12);
+      osc2.stop(now + 0.55);
+
+      // Note 3 (B5)
+      const osc3 = ctx.createOscillator();
+      const gain3 = ctx.createGain();
+      osc3.type = 'sine';
+      osc3.frequency.setValueAtTime(987.77, now + 0.24);
+      gain3.gain.setValueAtTime(0.12, now + 0.24);
+      gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+      osc3.connect(gain3);
+      gain3.connect(ctx.destination);
+      osc3.start(now + 0.24);
+      osc3.stop(now + 0.85);
+    } catch (e) {}
   }
 
   function updateVoiceUIState() {
@@ -95,11 +167,69 @@
     const voices = window.speechSynthesis.getVoices();
     if (!voices || voices.length === 0) return;
 
-    preferredVoice = voices.find(v => (v.lang === 'en-IN' || v.lang === 'en_IN') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Neural'))) ||
-                     voices.find(v => v.lang === 'en-IN' || v.lang === 'en_IN') ||
-                     voices.find(v => (v.lang === 'en-US' || v.lang === 'en_US') && (v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Jenny') || v.name.includes('Guy'))) ||
-                     voices.find(v => v.lang.startsWith('en')) ||
-                     voices[0];
+    availableVoices = voices;
+
+    // Intelligent Humanlike Natural Voice Ranking:
+    // 1. Microsoft Natural / Neural Voices
+    // 2. Google Neural / Studio Voices
+    // 3. Apple Enhanced / Premium (Samantha, Alex, Ava)
+    // 4. Standard English Voices
+    const naturalUsFemale = voices.find(v => (v.name.includes('Aria') || v.name.includes('Jenny') || v.name.includes('Samantha') || v.name.includes('Zira')) && v.lang.startsWith('en'));
+    const naturalUsMale = voices.find(v => (v.name.includes('Guy') || v.name.includes('Alex') || v.name.includes('David') || v.name.includes('Christopher')) && v.lang.startsWith('en'));
+    const googleVoice = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'));
+    const indianNatural = voices.find(v => (v.name.includes('Neerja') || v.name.includes('Prabhat') || v.name.includes('Heera')) || (v.lang === 'en-IN' || v.lang === 'en_IN'));
+
+    const savedVoiceURI = localStorage.getItem('resumeforge_selected_voice_uri');
+    if (savedVoiceURI) {
+      preferredVoice = voices.find(v => v.voiceURI === savedVoiceURI);
+    }
+
+    if (!preferredVoice) {
+      preferredVoice = naturalUsFemale || naturalUsMale || googleVoice || indianNatural || voices.find(v => v.lang.startsWith('en')) || voices[0];
+    }
+
+    populateVoiceSelector(voices);
+  }
+
+  function populateVoiceSelector(voices) {
+    if (!voiceSelectEl) return;
+
+    const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+    const listToRender = englishVoices.length > 0 ? englishVoices : voices;
+
+    voiceSelectEl.innerHTML = '';
+    listToRender.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.voiceURI;
+      let label = v.name.replace(/Microsoft|Google|Apple|Natural|Desktop|Online/gi, '').trim();
+      if (v.lang) label += ` (${v.lang})`;
+      opt.textContent = label;
+      if (preferredVoice && v.voiceURI === preferredVoice.voiceURI) {
+        opt.selected = true;
+      }
+      voiceSelectEl.appendChild(opt);
+    });
+
+    voiceSelectEl.onchange = (e) => {
+      const chosen = voices.find(v => v.voiceURI === e.target.value);
+      if (chosen) {
+        preferredVoice = chosen;
+        localStorage.setItem('resumeforge_selected_voice_uri', chosen.voiceURI);
+      }
+    };
+  }
+
+  function humanizeTextForSpeech(text) {
+    if (!text) return '';
+    let cleaned = text.replace(/[*_~`#]/g, ' ').trim();
+    cleaned = cleaned.replace(/\s+/g, ' ');
+
+    // Expand technical acronyms into spoken form
+    TECH_PRONUNCIATION_MAP.forEach(([regex, replacement]) => {
+      cleaned = cleaned.replace(regex, replacement);
+    });
+
+    return cleaned;
   }
 
   function speakText(text, isManualReplay = false, triggerBtn = null) {
@@ -108,30 +238,64 @@
 
     stopSpeaking();
 
-    const cleanText = text.replace(/[*_~`#]/g, '').trim();
-    if (!cleanText) return;
+    const spokenText = humanizeTextForSpeech(text);
+    if (!spokenText) return;
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
+    const utterance = new SpeechSynthesisUtterance(spokenText);
     if (preferredVoice) {
       utterance.voice = preferredVoice;
+      utterance.lang = preferredVoice.lang;
+    } else {
+      utterance.lang = 'en-US';
     }
-    utterance.rate = 1.0;
+
+    // Natural human cadence
+    utterance.rate = 0.95;
     utterance.pitch = 1.0;
-    utterance.lang = preferredVoice ? preferredVoice.lang : 'en-US';
+    utterance.volume = 1.0;
+
+    const pulseRing = document.getElementById('ai-pulse-ring');
+    const speakingStatus = document.getElementById('ai-speaking-status');
+
+    utterance.onstart = () => {
+      if (pulseRing) pulseRing.style.display = 'block';
+      if (speakingStatus) {
+        speakingStatus.innerHTML = `
+          <span class="badge bg-success rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1.5 shadow-sm">
+            <span class="soundwave-bars">
+              <span class="soundwave-bar"></span>
+              <span class="soundwave-bar"></span>
+              <span class="soundwave-bar"></span>
+              <span class="soundwave-bar"></span>
+            </span>
+            <span>Interviewer Speaking...</span>
+          </span>
+        `;
+      }
+    };
+
+    utterance.onend = () => {
+      if (pulseRing) pulseRing.style.display = 'none';
+      if (speakingStatus) {
+        speakingStatus.innerHTML = '<span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...';
+      }
+      if (triggerBtn) {
+        triggerBtn.innerHTML = '<i class="bi bi-volume-up text-secondary" style="font-size: 0.8rem;"></i>';
+      }
+    };
+
+    utterance.onerror = () => {
+      if (pulseRing) pulseRing.style.display = 'none';
+      if (speakingStatus) {
+        speakingStatus.innerHTML = '<span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...';
+      }
+      if (triggerBtn) {
+        triggerBtn.innerHTML = '<i class="bi bi-volume-up text-secondary" style="font-size: 0.8rem;"></i>';
+      }
+    };
 
     if (triggerBtn) {
-      const origIcon = triggerBtn.innerHTML;
-      triggerBtn.innerHTML = '<i class="bi bi-volume-up-fill text-primary"></i>';
-      triggerBtn.classList.add('btn-primary-subtle');
-
-      utterance.onend = () => {
-        triggerBtn.innerHTML = origIcon;
-        triggerBtn.classList.remove('btn-primary-subtle');
-      };
-      utterance.onerror = () => {
-        triggerBtn.innerHTML = origIcon;
-        triggerBtn.classList.remove('btn-primary-subtle');
-      };
+      triggerBtn.innerHTML = '<i class="bi bi-volume-up-fill text-primary" style="font-size: 0.8rem;"></i>';
     }
 
     window.speechSynthesis.speak(utterance);
@@ -140,6 +304,12 @@
   function stopSpeaking() {
     if (isSpeechSynthesisSupported && window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
+    }
+    const pulseRing = document.getElementById('ai-pulse-ring');
+    const speakingStatus = document.getElementById('ai-speaking-status');
+    if (pulseRing) pulseRing.style.display = 'none';
+    if (speakingStatus) {
+      speakingStatus.innerHTML = '<span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Ready';
     }
   }
 
@@ -154,10 +324,10 @@
     const fillerEl = document.getElementById('speech-filler-count');
     if (fillerEl) fillerEl.textContent = totalFillerWords;
 
-    // Calculate WPM
+    // Calculate WPM Pacing
     if (speechStartTime && wordCount > 3) {
       const elapsedMinutes = (Date.now() - speechStartTime) / 60000;
-      if (elapsedMinutes > 0.05) {
+      if (elapsedMinutes > 0.04) {
         const wpm = Math.round(wordCount / elapsedMinutes);
         const wpmEl = document.getElementById('speech-wpm-val');
         const badgeEl = document.getElementById('speech-pacing-badge');
@@ -281,7 +451,7 @@
     clearSilenceTimer();
     silenceTimer = setTimeout(() => {
       stopListening();
-    }, 3000);
+    }, 3500);
   }
 
   function resetSilenceTimer() {
@@ -306,7 +476,7 @@
       micBtn.innerHTML = '<i class="bi bi-mic-fill"></i>';
       micBtn.setAttribute('title', 'Listening... Tap to stop');
       if (voiceStatusLabel) {
-        voiceStatusLabel.innerHTML = '<span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 8px; height: 8px;"></span> <span class="text-danger fw-bold">Listening...</span>';
+        voiceStatusLabel.innerHTML = '<span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 8px; height: 8px;"></span> <span class="text-danger fw-bold">Listening to you...</span>';
         voiceStatusLabel.classList.remove('d-none');
       }
     } else {

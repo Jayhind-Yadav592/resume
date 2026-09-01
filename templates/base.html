@@ -26,9 +26,16 @@
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/custom.css' %}">
 
+  <!-- Three.js (r128) 3D Animated Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+  <script src="{% static 'js/bg-animation.js' %}" defer></script>
+
   {% block extra_head %}{% endblock %}
 </head>
 <body>
+  <!-- 3D Animated Background Canvas (Fixed, Full Viewport, Pointer-Events None) -->
+  <canvas id="bg-canvas"></canvas>
+
   <!-- Global Top Navbar -->
   {% include 'includes/navbar.html' %}
 

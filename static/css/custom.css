@@ -100,14 +100,45 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   Core Component: Glassmorphic Cards & Panels
+   3D Animated Canvas Layer & Glassmorphism Surfaces
    ========================================================================== */
-.card-custom,
+#bg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  display: block;
+}
+
+/* Glassmorphic Panel Utilities (Part 2) */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.70) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px 0 rgba(31, 38, 135, 0.05), 0 2px 8px 0 rgba(0, 0, 0, 0.02);
+}
+
+.glass-panel-dark {
+  background: rgba(17, 17, 27, 0.75) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  color: #FFFFFF;
+}
+
+/* Core Component: Glassmorphic Cards & Panels */
+.card-custom {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: var(--rf-radius-lg);
   box-shadow: var(--glass-shadow), var(--glass-inset-glow);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -116,7 +147,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .card-custom-hover:hover {
-  background: var(--glass-bg-elevated);
+  background: rgba(255, 255, 255, 0.92);
   border-color: rgba(255, 255, 255, 1);
   box-shadow: var(--glass-shadow-hover), var(--glass-inset-glow);
   transform: translateY(-4px);
@@ -134,7 +165,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Glass Badge / Pill */
 .glass-badge {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.9);

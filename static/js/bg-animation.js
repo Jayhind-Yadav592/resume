@@ -1,6 +1,6 @@
 /**
- * ResumeForge AI — Lightweight 3D Animated Background (Three.js r128)
- * Features low-poly floating geometry, subtle brand glow, parallax, and zero CPU waste.
+ * ResumeForge AI — Subtle 3D Ambient Geometric Background (Three.js r128)
+ * Fixed background layer with zero DOM obstruction, low CPU usage, and high aesthetics.
  */
 
 (function () {
@@ -20,7 +20,17 @@
       return;
     }
 
-    // Check prefers-reduced-motion
+    // Force strict fixed background positioning
+    canvas.style.setProperty('position', 'fixed', 'important');
+    canvas.style.setProperty('top', '0px', 'important');
+    canvas.style.setProperty('left', '0px', 'important');
+    canvas.style.setProperty('width', '100vw', 'important');
+    canvas.style.setProperty('height', '100vh', 'important');
+    canvas.style.setProperty('z-index', '-9999', 'important');
+    canvas.style.setProperty('pointer-events', 'none', 'important');
+    canvas.style.setProperty('display', 'block', 'important');
+
+    // Check accessibility reduced-motion preference
     prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // 1. Scene Setup
@@ -29,9 +39,9 @@
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    // 2. Camera Setup
-    camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-    camera.position.z = 32;
+    // 2. Camera Setup (Pushed further back for depth and subtler size)
+    camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
+    camera.position.z = 45;
 
     // 3. Renderer Setup
     renderer = new THREE.WebGLRenderer({
@@ -40,53 +50,50 @@
       antialias: true,
       powerPreference: 'low-power'
     });
-    renderer.setSize(width, height);
+    renderer.setSize(width, height, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 
-    // 4. Lighting (Soft, subtle shaded shapes)
-    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.85);
+    // 4. Soft Ambient Lighting
+    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.9);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0x818CF8, 1.2, 80);
-    pointLight.position.set(20, 20, 20);
+    const pointLight = new THREE.PointLight(0x818CF8, 1.0, 100);
+    pointLight.position.set(25, 30, 25);
     scene.add(pointLight);
 
-    const pointLight2 = new THREE.PointLight(0x4F46E5, 0.9, 80);
-    pointLight2.position.set(-20, -20, 15);
+    const pointLight2 = new THREE.PointLight(0x4F46E5, 0.8, 100);
+    pointLight2.position.set(-25, -20, 20);
     scene.add(pointLight2);
 
-    // 5. Materials (Brand Indigo & Soft Violet at 0.15-0.22 opacity)
-    const indigoColor = new THREE.Color(0x4F46E5);
-    const violetColor = new THREE.Color(0x818CF8);
-
+    // 5. Materials (Brand Indigo & Soft Violet at subtle 0.10 - 0.14 opacity)
     const materialIndigo = new THREE.MeshStandardMaterial({
-      color: indigoColor,
-      roughness: 0.35,
-      metalness: 0.15,
+      color: 0x4F46E5,
+      roughness: 0.4,
+      metalness: 0.1,
       transparent: true,
-      opacity: 0.18,
+      opacity: 0.12,
       flatShading: true
     });
 
     const materialViolet = new THREE.MeshStandardMaterial({
-      color: violetColor,
-      roughness: 0.35,
-      metalness: 0.15,
+      color: 0x818CF8,
+      roughness: 0.4,
+      metalness: 0.1,
       transparent: true,
-      opacity: 0.20,
+      opacity: 0.14,
       flatShading: true
     });
 
-    // 6. Geometry Generation (25-35 on desktop, 10-12 on mobile)
+    // 6. Geometry Generation (Compact, refined particle size)
     const isMobile = width < 768;
-    const shapeCount = isMobile ? 12 : 28;
+    const shapeCount = isMobile ? 10 : 24;
 
     const geometries = [
-      new THREE.IcosahedronGeometry(1.6, 0),
-      new THREE.IcosahedronGeometry(2.4, 0),
-      new THREE.TorusGeometry(1.8, 0.5, 8, 16),
-      new THREE.TorusGeometry(1.2, 0.35, 6, 12),
-      new THREE.OctahedronGeometry(1.8, 0)
+      new THREE.IcosahedronGeometry(1.0, 0),
+      new THREE.IcosahedronGeometry(1.4, 0),
+      new THREE.TorusGeometry(1.2, 0.3, 8, 16),
+      new THREE.TorusGeometry(0.9, 0.25, 6, 12),
+      new THREE.OctahedronGeometry(1.1, 0)
     ];
 
     for (let i = 0; i < shapeCount; i++) {
@@ -94,25 +101,23 @@
       const mat = (i % 2 === 0) ? materialIndigo : materialViolet;
       const mesh = new THREE.Mesh(geom, mat);
 
-      // Random 3D space distribution
-      mesh.position.x = (Math.random() - 0.5) * 55;
-      mesh.position.y = (Math.random() - 0.5) * 38;
-      mesh.position.z = (Math.random() - 0.5) * 25 - 5;
+      // Distribute evenly across viewport
+      mesh.position.x = (Math.random() - 0.5) * 70;
+      mesh.position.y = (Math.random() - 0.5) * 50;
+      mesh.position.z = (Math.random() - 0.5) * 30 - 5;
 
-      // Random rotation
       mesh.rotation.x = Math.random() * Math.PI * 2;
       mesh.rotation.y = Math.random() * Math.PI * 2;
       mesh.rotation.z = Math.random() * Math.PI * 2;
 
-      // Unique gentle drift and rotation attributes
       const shapeData = {
         mesh: mesh,
-        rotSpeedX: (Math.random() - 0.5) * 0.006,
-        rotSpeedY: (Math.random() - 0.5) * 0.008,
-        rotSpeedZ: (Math.random() - 0.5) * 0.005,
-        floatSpeed: 0.0008 + Math.random() * 0.0012,
+        rotSpeedX: (Math.random() - 0.5) * 0.004,
+        rotSpeedY: (Math.random() - 0.5) * 0.005,
+        rotSpeedZ: (Math.random() - 0.5) * 0.003,
+        floatSpeed: 0.0006 + Math.random() * 0.0008,
         floatOffset: Math.random() * Math.PI * 2,
-        floatAmplitude: 0.6 + Math.random() * 0.8,
+        floatAmplitude: 0.4 + Math.random() * 0.6,
         baseY: mesh.position.y
       };
 
@@ -127,7 +132,7 @@
     window.addEventListener('resize', onWindowResize, { passive: true });
     document.addEventListener('visibilitychange', onVisibilityChange);
 
-    // Initial render / Start loop
+    // Initial render
     if (prefersReducedMotion) {
       renderer.render(scene, camera);
     } else {
@@ -136,8 +141,8 @@
   }
 
   function onMouseMove(event) {
-    targetMouseX = (event.clientX / window.innerWidth - 0.5) * 2.5;
-    targetMouseY = (event.clientY / window.innerHeight - 0.5) * 2.5;
+    targetMouseX = (event.clientX / window.innerWidth - 0.5) * 1.5;
+    targetMouseY = (event.clientY / window.innerHeight - 0.5) * 1.5;
   }
 
   function onWindowResize() {
@@ -146,7 +151,7 @@
     const h = window.innerHeight;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+    renderer.setSize(w, h, false);
     if (prefersReducedMotion) {
       renderer.render(scene, camera);
     }
@@ -171,15 +176,14 @@
     animationFrameId = requestAnimationFrame(animate);
     time += 1;
 
-    // Smooth mouse parallax lerp
-    mouseX += (targetMouseX - mouseX) * 0.04;
-    mouseY += (targetMouseY - mouseY) * 0.04;
+    // Smooth subtle camera lerp
+    mouseX += (targetMouseX - mouseX) * 0.03;
+    mouseY += (targetMouseY - mouseY) * 0.03;
 
-    camera.position.x = mouseX * 1.5;
-    camera.position.y = -mouseY * 1.5;
+    camera.position.x = mouseX * 1.2;
+    camera.position.y = -mouseY * 1.2;
     camera.lookAt(0, 0, 0);
 
-    // Animate individual shapes
     for (let i = 0; i < shapes.length; i++) {
       const s = shapes[i];
       s.mesh.rotation.x += s.rotSpeedX;
@@ -191,7 +195,6 @@
     renderer.render(scene, camera);
   }
 
-  // Cleanup helper
   window.destroyThreeBackground = function () {
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
@@ -214,7 +217,6 @@
     }
   };
 
-  // Safe DOMContentLoaded hook
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initThreeBackground);
   } else {

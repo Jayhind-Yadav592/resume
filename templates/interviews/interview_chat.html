@@ -54,9 +54,12 @@
 
           <div class="text-center text-white z-2 mb-4">
             <h2 class="h6 fw-bold text-white mb-1">AI Lead Technical Interviewer</h2>
-            <div class="small text-white-50" id="ai-speaking-status">
+            <div class="small text-white-50 mb-2" id="ai-speaking-status">
               <span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...
             </div>
+            <button type="button" id="btn-tile-hear-ai" class="btn btn-sm btn-primary-custom py-1 px-3 rounded-pill shadow-xs" onclick="window.VoiceInterview && window.VoiceInterview.replay()" title="Click to listen/replay interviewer question">
+              <i class="bi bi-volume-up-fill me-1"></i> Hear Question Audio
+            </button>
           </div>
 
           <!-- Live Closed Captions / Subtitle Bar Overlay -->
@@ -245,7 +248,7 @@
 
 {% block extra_scripts %}
 <!-- Voice Mode Engine (Native Web Speech API) -->
-<script src="{% static 'js/interviews/voice.js' %}"></script>
+<script src="{% static 'js/interviews/voice.js' %}?v=20260901_8"></script>
 
 <script>
   let currentSessionId = null;

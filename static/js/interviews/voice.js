@@ -1,7 +1,7 @@
 /**
  * ResumeForge AI — Ultra-Humanlike Conversational Voice Engine
  * Uses Web Speech Synthesis & Recognition with Natural Voice Filtering,
- * Tech Acronym Expansion, Pacing Intelligence, and Live Soundwave Equalizers.
+ * Tech Acronym Expansion, Pacing Intelligence, Autoplay Unblockers, and Live Equalizers.
  */
 
 (function () {
@@ -20,6 +20,7 @@
   let transcriptBase = '';
   let speechStartTime = null;
   let totalFillerWords = 0;
+  let lastSpokenText = '';
 
   const FILLER_WORD_REGEX = /\b(um|uh|like|basically|actually|literally|you know|sort of|kind of)\b/gi;
 
@@ -58,6 +59,16 @@
     answerTextarea = document.getElementById('answer-input');
     voiceSupportNotice = document.getElementById('voice-support-notice');
     voiceSelectEl = document.getElementById('interviewer-voice-select');
+
+    // Global Browser Autoplay Unblocker: Resume SpeechSynthesis on any user click or touch
+    const unblockAudio = () => {
+      if (isSpeechSynthesisSupported) {
+        window.speechSynthesis.resume();
+      }
+    };
+    window.addEventListener('click', unblockAudio, { passive: true });
+    window.addEventListener('keydown', unblockAudio, { passive: true });
+    window.addEventListener('touchstart', unblockAudio, { passive: true });
 
     const savedPref = localStorage.getItem('resumeforge_voice_mode');
     if (savedPref !== null) {
@@ -169,11 +180,7 @@
 
     availableVoices = voices;
 
-    // Intelligent Humanlike Natural Voice Ranking:
-    // 1. Microsoft Natural / Neural Voices
-    // 2. Google Neural / Studio Voices
-    // 3. Apple Enhanced / Premium (Samantha, Alex, Ava)
-    // 4. Standard English Voices
+    // Intelligent Humanlike Natural Voice Ranking
     const naturalUsFemale = voices.find(v => (v.name.includes('Aria') || v.name.includes('Jenny') || v.name.includes('Samantha') || v.name.includes('Zira')) && v.lang.startsWith('en'));
     const naturalUsMale = voices.find(v => (v.name.includes('Guy') || v.name.includes('Alex') || v.name.includes('David') || v.name.includes('Christopher')) && v.lang.startsWith('en'));
     const googleVoice = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'));
@@ -224,7 +231,6 @@
     let cleaned = text.replace(/[*_~`#]/g, ' ').trim();
     cleaned = cleaned.replace(/\s+/g, ' ');
 
-    // Expand technical acronyms into spoken form
     TECH_PRONUNCIATION_MAP.forEach(([regex, replacement]) => {
       cleaned = cleaned.replace(regex, replacement);
     });
@@ -236,73 +242,96 @@
     if (!isSpeechSynthesisSupported) return;
     if (!isManualReplay && !voiceModeEnabled) return;
 
-    stopSpeaking();
+    lastSpokenText = text;
+
+    // Chrome workaround: resume before speak
+    window.speechSynthesis.resume();
+    window.speechSynthesis.cancel();
 
     const spokenText = humanizeTextForSpeech(text);
     if (!spokenText) return;
 
-    const utterance = new SpeechSynthesisUtterance(spokenText);
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-      utterance.lang = preferredVoice.lang;
-    } else {
-      utterance.lang = 'en-US';
-    }
+    // Small delay prevents Chrome from aborting immediately after cancel()
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(spokenText);
+      
+      if (!preferredVoice && availableVoices.length > 0) {
+        loadVoices();
+      }
 
-    // Natural human cadence
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+        utterance.lang = preferredVoice.lang;
+      } else {
+        utterance.lang = 'en-US';
+      }
 
-    const pulseRing = document.getElementById('ai-pulse-ring');
-    const speakingStatus = document.getElementById('ai-speaking-status');
+      // Natural human cadence
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
 
-    utterance.onstart = () => {
-      if (pulseRing) pulseRing.style.display = 'block';
-      if (speakingStatus) {
-        speakingStatus.innerHTML = `
-          <span class="badge bg-success rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1.5 shadow-sm">
-            <span class="soundwave-bars">
-              <span class="soundwave-bar"></span>
-              <span class="soundwave-bar"></span>
-              <span class="soundwave-bar"></span>
-              <span class="soundwave-bar"></span>
+      const pulseRing = document.getElementById('ai-pulse-ring');
+      const speakingStatus = document.getElementById('ai-speaking-status');
+      const tileVoiceBtn = document.getElementById('btn-tile-hear-ai');
+
+      utterance.onstart = () => {
+        if (pulseRing) pulseRing.style.display = 'block';
+        if (tileVoiceBtn) tileVoiceBtn.classList.add('d-none');
+        if (speakingStatus) {
+          speakingStatus.innerHTML = `
+            <span class="badge bg-success rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1.5 shadow-sm">
+              <span class="soundwave-bars">
+                <span class="soundwave-bar"></span>
+                <span class="soundwave-bar"></span>
+                <span class="soundwave-bar"></span>
+                <span class="soundwave-bar"></span>
+              </span>
+              <span>Interviewer Speaking...</span>
             </span>
-            <span>Interviewer Speaking...</span>
-          </span>
-        `;
-      }
-    };
+          `;
+        }
+      };
 
-    utterance.onend = () => {
-      if (pulseRing) pulseRing.style.display = 'none';
-      if (speakingStatus) {
-        speakingStatus.innerHTML = '<span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...';
-      }
+      utterance.onend = () => {
+        if (pulseRing) pulseRing.style.display = 'none';
+        if (speakingStatus) {
+          speakingStatus.innerHTML = '<span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...';
+        }
+        if (triggerBtn) {
+          triggerBtn.innerHTML = '<i class="bi bi-volume-up text-secondary" style="font-size: 0.8rem;"></i>';
+        }
+      };
+
+      utterance.onerror = (err) => {
+        console.warn('Speech synthesis notice:', err);
+        if (pulseRing) pulseRing.style.display = 'none';
+        if (tileVoiceBtn) tileVoiceBtn.classList.remove('d-none');
+        if (speakingStatus) {
+          speakingStatus.innerHTML = '<span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...';
+        }
+        if (triggerBtn) {
+          triggerBtn.innerHTML = '<i class="bi bi-volume-up text-secondary" style="font-size: 0.8rem;"></i>';
+        }
+      };
+
       if (triggerBtn) {
-        triggerBtn.innerHTML = '<i class="bi bi-volume-up text-secondary" style="font-size: 0.8rem;"></i>';
+        triggerBtn.innerHTML = '<i class="bi bi-volume-up-fill text-primary" style="font-size: 0.8rem;"></i>';
       }
-    };
 
-    utterance.onerror = () => {
-      if (pulseRing) pulseRing.style.display = 'none';
-      if (speakingStatus) {
-        speakingStatus.innerHTML = '<span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...';
-      }
-      if (triggerBtn) {
-        triggerBtn.innerHTML = '<i class="bi bi-volume-up text-secondary" style="font-size: 0.8rem;"></i>';
-      }
-    };
+      window.speechSynthesis.speak(utterance);
+      window.speechSynthesis.resume();
+    }, 60);
+  }
 
-    if (triggerBtn) {
-      triggerBtn.innerHTML = '<i class="bi bi-volume-up-fill text-primary" style="font-size: 0.8rem;"></i>';
+  function replayLastQuestion() {
+    if (lastSpokenText) {
+      speakText(lastSpokenText, true);
     }
-
-    window.speechSynthesis.speak(utterance);
   }
 
   function stopSpeaking() {
-    if (isSpeechSynthesisSupported && window.speechSynthesis.speaking) {
+    if (isSpeechSynthesisSupported) {
       window.speechSynthesis.cancel();
     }
     const pulseRing = document.getElementById('ai-pulse-ring');
@@ -507,6 +536,7 @@
   window.VoiceInterview = {
     init: initVoiceMode,
     speak: speakText,
+    replay: replayLastQuestion,
     stopSpeaking: stopSpeaking,
     isSpeechSynthesisSupported: () => isSpeechSynthesisSupported,
     isSpeechRecognitionSupported: () => isSpeechRecognitionSupported,

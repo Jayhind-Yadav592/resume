@@ -24,18 +24,11 @@
 
   <!-- Custom Design System CSS -->
   {% load static %}
-  <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20260901_2">
-
-  <!-- Three.js (r128) 3D Animated Engine -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-  <script src="{% static 'js/bg-animation.js' %}?v=20260901_2" defer></script>
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20260901_3">
 
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-  <!-- 3D Animated Background Canvas (Strict Fixed Background Layer) -->
-  <canvas id="bg-canvas" style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: -9999 !important; pointer-events: none !important; display: block !important;"></canvas>
-
   <!-- Global Top Navbar -->
   {% include 'includes/navbar.html' %}
 

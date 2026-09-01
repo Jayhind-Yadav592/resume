@@ -201,10 +201,112 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-lg-4 dashboard-wrapper">
+<!-- Mobile Sidebar Offcanvas Drawer (< 992px) -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+  <div class="offcanvas-header border-bottom">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary rounded-3 p-2"><i class="bi bi-speedometer2 text-white"></i></span>
+      <h5 class="offcanvas-title fw-bold text-dark fs-6" id="sidebarOffcanvasLabel">ResumeForge Navigation</h5>
+    </div>
+    <button type="button" class="btn-close text-reset shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body p-3">
+    <!-- User Profile Badge -->
+    <div class="user-profile-badge mb-3">
+      <div class="user-avatar-initial" id="avatar-initials-mobile">R</div>
+      <div style="min-width: 0;">
+        <div class="fw-bold text-dark text-truncate small" id="user-display-name-mobile">Candidate</div>
+        <div class="text-success small fw-semibold" style="font-size: 0.72rem;">
+          <i class="bi bi-patch-check-fill me-1"></i> Active Member
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navigation Items -->
+    <div class="nav-section-title">Main Navigation</div>
+    <a href="/resumes/dashboard/" class="sidebar-nav-link active">
+      <div class="link-content">
+        <span class="icon-box"><i class="bi bi-speedometer2 text-primary"></i></span>
+        <span>Dashboard</span>
+      </div>
+      <i class="bi bi-chevron-right arrow-icon"></i>
+    </a>
+    <a href="/resumes/upload/" class="sidebar-nav-link">
+      <div class="link-content">
+        <span class="icon-box"><i class="bi bi-file-earmark-arrow-up text-primary"></i></span>
+        <span>New ATS Scan</span>
+      </div>
+      <i class="bi bi-chevron-right arrow-icon"></i>
+    </a>
+    <a href="/resumes/builder/" class="sidebar-nav-link">
+      <div class="link-content">
+        <span class="icon-box"><i class="bi bi-pencil-square text-indigo"></i></span>
+        <span>Builder</span>
+      </div>
+      <i class="bi bi-chevron-right arrow-icon"></i>
+    </a>
+    <a href="/practice/mcq/" class="sidebar-nav-link">
+      <div class="link-content">
+        <span class="icon-box"><i class="bi bi-code-slash text-success"></i></span>
+        <span>Practice</span>
+      </div>
+      <i class="bi bi-chevron-right arrow-icon"></i>
+    </a>
+    <a href="/interviews/setup/" class="sidebar-nav-link">
+      <div class="link-content">
+        <span class="icon-box"><i class="bi bi-camera-video text-danger"></i></span>
+        <span>Mock Interview</span>
+      </div>
+      <i class="bi bi-chevron-right arrow-icon"></i>
+    </a>
+    <a href="/interviews/companies/" class="sidebar-nav-link">
+      <div class="link-content">
+        <span class="icon-box"><i class="bi bi-buildings text-info"></i></span>
+        <span>Question Bank</span>
+      </div>
+      <i class="bi bi-chevron-right arrow-icon"></i>
+    </a>
+    <a href="/tools/salary-estimator/" class="sidebar-nav-link">
+      <div class="link-content">
+        <span class="icon-box"><i class="bi bi-cash-stack text-success"></i></span>
+        <span>Salary Estimator</span>
+      </div>
+      <i class="bi bi-chevron-right arrow-icon"></i>
+    </a>
+
+    <div class="nav-section-title mt-3">Account & Pro</div>
+    <a href="/pricing/" class="sidebar-nav-link">
+      <div class="link-content">
+        <span class="icon-box"><i class="bi bi-star-fill text-warning"></i></span>
+        <span class="text-warning fw-bold">Pro Plan</span>
+      </div>
+      <i class="bi bi-chevron-right arrow-icon"></i>
+    </a>
+    <a href="javascript:void(0)" onclick="handleGlobalLogout()" class="sidebar-nav-link text-danger">
+      <div class="link-content">
+        <span class="icon-box"><i class="bi bi-box-arrow-right text-danger"></i></span>
+        <span>Sign Out</span>
+      </div>
+      <i class="bi bi-box-arrow-right arrow-icon text-danger"></i>
+    </a>
+  </div>
+</div>
+
+<div class="container-fluid px-3 px-lg-4 dashboard-wrapper">
+  <!-- Mobile Offcanvas Toggle Button (< 992px) -->
+  <div class="d-lg-none mb-3">
+    <button class="btn btn-outline-custom w-100 d-flex justify-content-between align-items-center py-2.5 shadow-xs" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+      <span class="d-flex align-items-center gap-2">
+        <i class="bi bi-list fs-5 text-primary"></i>
+        <span class="fw-bold">Open Navigation Menu</span>
+      </span>
+      <i class="bi bi-chevron-right text-muted small"></i>
+    </button>
+  </div>
+
   <div class="row g-4">
-    <!-- Left Column: Clean SaaS Sidebar -->
-    <div class="col-lg-3 col-xl-2.5" style="max-width: 280px;">
+    <!-- Left Column: Clean SaaS Sidebar (Desktop >= 992px) -->
+    <div class="col-lg-3 col-xl-2.5 d-none d-lg-block" style="max-width: 280px;">
       <div class="saas-sidebar sticky-top" style="top: 80px; z-index: 20;">
         <!-- User Profile Card -->
         <div class="user-profile-badge">
@@ -306,8 +408,8 @@
       </div>
     </div>
 
-    <!-- Right Column: Clean SaaS Workspace -->
-    <div class="col-lg-9 col-xl-9.5">
+    <!-- Right Column: Clean SaaS Workspace (Full Width on mobile, Fluid on Desktop) -->
+    <div class="col-12 col-lg-9 col-xl-9.5">
       <!-- Top Clean Header Strip -->
       <div class="dashboard-card mb-4">
         <div class="p-3 p-md-4">
@@ -356,32 +458,40 @@
         </div>
 
         <div class="dashboard-card-body">
-          <!-- Summary Metrics Strip -->
+          <!-- Summary Metrics Strip (1-col below 576px, 2-col at 576-991px, 4-col at 992px+) -->
           <div class="row g-3 mb-4 pb-3 border-bottom text-center text-sm-start">
-            <div class="col-6 col-md-3">
-              <div class="text-muted small fw-bold" style="font-size: 0.72rem;">BASELINE SCORE</div>
-              <div class="fw-extrabold text-dark fs-5" id="stat-baseline">--</div>
-              <div class="text-secondary small" style="font-size: 0.7rem;">First analyzed version</div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="p-2 rounded-3 bg-light border">
+                <div class="text-muted small fw-bold" style="font-size: 0.72rem;">BASELINE SCORE</div>
+                <div class="fw-extrabold text-dark fs-5" id="stat-baseline">--</div>
+                <div class="text-secondary small" style="font-size: 0.7rem;">First analyzed version</div>
+              </div>
             </div>
-            <div class="col-6 col-md-3">
-              <div class="text-muted small fw-bold" style="font-size: 0.72rem;">LATEST SCORE</div>
-              <div class="fw-extrabold text-primary fs-5" id="stat-latest">--</div>
-              <div class="text-secondary small" style="font-size: 0.7rem;">Most recent version</div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="p-2 rounded-3 bg-light border">
+                <div class="text-muted small fw-bold" style="font-size: 0.72rem;">LATEST SCORE</div>
+                <div class="fw-extrabold text-primary fs-5" id="stat-latest">--</div>
+                <div class="text-secondary small" style="font-size: 0.7rem;">Most recent version</div>
+              </div>
             </div>
-            <div class="col-6 col-md-3">
-              <div class="text-muted small fw-bold" style="font-size: 0.72rem;">NET IMPROVEMENT</div>
-              <div class="fw-extrabold text-success fs-5" id="stat-growth">--</div>
-              <div class="text-secondary small" style="font-size: 0.7rem;">Score progression delta</div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="p-2 rounded-3 bg-light border">
+                <div class="text-muted small fw-bold" style="font-size: 0.72rem;">NET IMPROVEMENT</div>
+                <div class="fw-extrabold text-success fs-5" id="stat-growth">--</div>
+                <div class="text-secondary small" style="font-size: 0.7rem;">Score progression delta</div>
+              </div>
             </div>
-            <div class="col-6 col-md-3">
-              <div class="text-muted small fw-bold" style="font-size: 0.72rem;">TOTAL SCANS</div>
-              <div class="fw-extrabold text-dark fs-5" id="stat-total-scans">0 Scans</div>
-              <div class="text-success small fw-semibold" style="font-size: 0.7rem;">Unlimited Free Tier</div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="p-2 rounded-3 bg-light border">
+                <div class="text-muted small fw-bold" style="font-size: 0.72rem;">TOTAL SCANS</div>
+                <div class="fw-extrabold text-dark fs-5" id="stat-total-scans">0 Scans</div>
+                <div class="text-success small fw-semibold" style="font-size: 0.7rem;">Unlimited Free Tier</div>
+              </div>
             </div>
           </div>
 
-          <!-- Interactive Chart.js Area Chart -->
-          <div style="height: 260px; position: relative;">
+          <!-- Interactive Responsive Chart.js Area Chart -->
+          <div class="chart-responsive-container">
             <canvas id="scoreTrendChart"></canvas>
           </div>
         </div>
@@ -390,7 +500,7 @@
       <!-- Quick Action Feature Cards (3 SaaS Power Tools) -->
       <div class="row g-3 mb-4">
         <!-- Card 1: Resume Builder -->
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
           <a href="/resumes/builder/" class="quick-feature-card">
             <div class="quick-feature-icon bg-primary-subtle text-primary">
               <i class="bi bi-pencil-square"></i>
@@ -404,7 +514,7 @@
         </div>
 
         <!-- Card 2: Practice Suite -->
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
           <a href="/practice/mcq/" class="quick-feature-card">
             <div class="quick-feature-icon bg-success-subtle text-success">
               <i class="bi bi-check2-square"></i>
@@ -418,7 +528,7 @@
         </div>
 
         <!-- Card 3: AI Mock Interview -->
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
           <a href="/interviews/setup/" class="quick-feature-card">
             <div class="quick-feature-icon bg-danger-subtle text-danger">
               <i class="bi bi-camera-video"></i>
@@ -552,6 +662,11 @@
         const fullName = user.first_name || user.username || 'Candidate';
         if (nameDisplay) nameDisplay.textContent = fullName;
         if (avatarInitial) avatarInitial.textContent = fullName.charAt(0).toUpperCase();
+
+        const mobileName = document.getElementById('user-display-name-mobile');
+        const mobileAvatar = document.getElementById('avatar-initials-mobile');
+        if (mobileName) mobileName.textContent = fullName;
+        if (mobileAvatar) mobileAvatar.textContent = fullName.charAt(0).toUpperCase();
 
         if (user.is_pro) {
           planSub.className = 'text-primary small fw-semibold';

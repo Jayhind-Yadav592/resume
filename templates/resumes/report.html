@@ -1,0 +1,650 @@
+{% extends 'base.html' %}
+
+{% block title %}ATS Match Report — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+  <!-- Top Navigation & Action -->
+  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
+    <div>
+      <a href="/resumes/dashboard/" class="small text-secondary text-decoration-none fw-semibold mb-1 d-inline-block">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+      </a>
+      <h1 class="h3 fw-bold text-dark mb-0" id="report-title">ATS Match Scorecard</h1>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="/resumes/upload/" class="btn btn-outline-custom">
+        <i class="bi bi-cloud-arrow-up me-1"></i> Scan Another
+      </a>
+      <button onclick="scrollToCoverLetter()" class="btn btn-outline-custom">
+        <i class="bi bi-file-earmark-text me-1 text-primary"></i> Cover Letter
+      </button>
+      <a href="#" id="btn-start-interview-top" class="btn btn-primary-custom shadow-sm">
+        <i class="bi bi-camera-video me-1"></i> Practice Interview
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="report-loading" class="text-center py-5">
+    <div class="spinner-border text-primary spinner-border-sm mb-2" role="status"></div>
+    <div class="text-secondary small">Generating comprehensive ATS breakdown & skill gaps...</div>
+  </div>
+
+  <!-- Report Content Container -->
+  <div id="report-content" class="d-none">
+    <!-- Score Overview Hero Card -->
+    <div class="card-custom p-4 p-md-5 mb-4 shadow-lg border-0">
+      <div class="row align-items-center g-4">
+        <!-- Circular Score Indicator -->
+        <div class="col-md-4 text-center">
+          <div id="overall-score-circle" class="score-circle score-circle-lg mx-auto mb-3 score-high">
+            <span class="fs-1 fw-bolder" id="overall-score-value">0%</span>
+            <span class="text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Overall Match</span>
+          </div>
+          <div class="small fw-bold text-secondary" id="score-verdict">Calculating ATS Compliance...</div>
+        </div>
+
+        <!-- Metric Breakdown Progress Bars -->
+        <div class="col-md-8 space-y-3">
+          <!-- Keyword Score -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small fw-bold mb-1">
+              <span class="text-dark"><i class="bi bi-key-fill text-primary me-1"></i> Keyword Relevance Overlap</span>
+              <span id="keyword-score-text" class="text-primary fw-bold">0%</span>
+            </div>
+            <div class="progress" style="height: 10px;">
+              <div id="keyword-progress-bar" class="progress-bar bg-primary" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Formatting Score -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small fw-bold mb-1">
+              <span class="text-dark"><i class="bi bi-layout-text-sidebar-reverse text-success me-1"></i> Formatting & Structural Parsing</span>
+              <span id="formatting-score-text" class="text-success fw-bold">0%</span>
+            </div>
+            <div class="progress" style="height: 10px;">
+              <div id="formatting-progress-bar" class="progress-bar bg-success" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Experience Score -->
+          <div class="mb-0">
+            <div class="d-flex justify-content-between small fw-bold mb-1">
+              <span class="text-dark"><i class="bi bi-briefcase-fill text-purple me-1"></i> Experience & Seniority Match</span>
+              <span id="experience-score-text" class="text-purple fw-bold">0%</span>
+            </div>
+            <div class="progress" style="height: 10px;">
+              <div id="experience-progress-bar" class="progress-bar" style="width: 0%; background-color: var(--rf-secondary-accent);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Missing Keywords with Free Learning Courses Card -->
+    <div class="card-custom mb-4 shadow-sm border-0">
+      <div class="card-custom-header d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-octagon-fill text-danger"></i> Skill Gaps & Free Learning Resources
+          </h2>
+          <p class="text-secondary small mb-0" style="font-size: 0.78rem;">Missing keywords detected in the JD with 1-click free courses to upskill fast.</p>
+        </div>
+        <span class="badge bg-danger-subtle text-danger border border-danger-subtle small px-2.5 py-1 rounded-pill" id="missing-count">0 Missing</span>
+      </div>
+      <div class="card-custom-body">
+        <div class="row g-3" id="missing-keywords-grid">
+          <!-- Populated via JS with rich learning links -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Actionable AI Suggestions Card -->
+    <div class="card-custom mb-4 shadow-sm border-0">
+      <div class="card-custom-header d-flex justify-content-between align-items-center">
+        <h2 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+          <i class="bi bi-lightbulb-fill text-warning"></i> Actionable Suggestions for Improvement
+        </h2>
+        <button onclick="copySuggestionsToClipboard()" class="btn btn-outline-custom btn-sm py-1 px-2.5" id="btn-copy-sug">
+          <i class="bi bi-clipboard me-1"></i> Copy Suggestions
+        </button>
+      </div>
+      <div class="card-custom-body">
+        <ul class="list-unstyled space-y-3 mb-0" id="suggestions-list">
+          <!-- Populated via JS -->
+        </ul>
+      </div>
+    </div>
+
+    <!-- NEW FEATURE: AI Resume Bullet Rewrite Suggestions (Before / After Refactor) -->
+    <div class="card-custom mb-4 shadow-sm border-0">
+      <div class="card-custom-header d-flex justify-content-between align-items-center">
+        <div>
+          <div class="d-inline-flex align-items-center gap-2 px-2.5 py-0.5 rounded-pill glass-badge small fw-bold mb-1 shadow-xs">
+            <span class="badge bg-success rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">⚡ High Impact</span>
+            <span>Bullet Point Refactoring</span>
+          </div>
+          <h2 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left-right text-primary"></i> AI Resume Rewrite Suggestions (Before / After)
+          </h2>
+        </div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small">XYZ Formula</span>
+      </div>
+      <div class="card-custom-body">
+        <div class="space-y-3" id="bullet-rewrites-container">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW FEATURE: LinkedIn Bio Optimizer Card -->
+    <div class="card-custom mb-4 shadow-sm border-0">
+      <div class="card-custom-header d-flex justify-content-between align-items-center">
+        <div>
+          <div class="d-inline-flex align-items-center gap-2 px-2.5 py-0.5 rounded-pill glass-badge small fw-bold mb-1 shadow-xs">
+            <span class="badge bg-info text-dark rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">💼 Personal Brand</span>
+            <span>LinkedIn About Optimizer</span>
+          </div>
+          <h2 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-linkedin text-primary"></i> LinkedIn Profile "About" Optimizer
+          </h2>
+        </div>
+        <button type="button" onclick="handleGenerateLinkedInBio()" id="btn-gen-linkedin" class="btn btn-outline-custom btn-sm py-1 px-3">
+          <i class="bi bi-magic me-1"></i> Generate LinkedIn Bio
+        </button>
+      </div>
+      <div class="card-custom-body">
+        <div id="linkedin-bio-loading" class="d-none text-center py-3 text-secondary small">
+          <span class="spinner-border spinner-border-sm text-primary me-2"></span> Crafting high-converting LinkedIn About summaries...
+        </div>
+        <div id="linkedin-bio-content" class="d-none">
+          <ul class="nav nav-pills mb-3 gap-2" id="linkedinTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="btn btn-sm btn-primary-custom active" id="punchy-tab" data-bs-toggle="pill" data-bs-target="#tab-punchy" type="button" role="tab">⚡ Punchy & Metric</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="btn btn-sm btn-outline-custom" id="story-tab" data-bs-toggle="pill" data-bs-target="#tab-story" type="button" role="tab">📖 Story-Driven</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="btn btn-sm btn-outline-custom" id="tech-tab" data-bs-toggle="pill" data-bs-target="#tab-tech" type="button" role="tab">🛠️ Deep Technical</button>
+            </li>
+          </ul>
+          <div class="tab-content" id="linkedinTabContent">
+            <div class="tab-pane fade show active" id="tab-punchy" role="tabpanel">
+              <div class="p-3 rounded-3 bg-light border text-dark font-monospace small mb-2" id="linkedin-punchy-text" style="white-space: pre-wrap; font-size: 0.8125rem;"></div>
+              <button onclick="copyLinkedInBio('punchy')" class="btn btn-outline-custom btn-sm"><i class="bi bi-clipboard me-1"></i> Copy Punchy Bio</button>
+            </div>
+            <div class="tab-pane fade" id="tab-story" role="tabpanel">
+              <div class="p-3 rounded-3 bg-light border text-dark font-monospace small mb-2" id="linkedin-story-text" style="white-space: pre-wrap; font-size: 0.8125rem;"></div>
+              <button onclick="copyLinkedInBio('story')" class="btn btn-outline-custom btn-sm"><i class="bi bi-clipboard me-1"></i> Copy Story Bio</button>
+            </div>
+            <div class="tab-pane fade" id="tab-tech" role="tabpanel">
+              <div class="p-3 rounded-3 bg-light border text-dark font-monospace small mb-2" id="linkedin-tech-text" style="white-space: pre-wrap; font-size: 0.8125rem;"></div>
+              <button onclick="copyLinkedInBio('tech')" class="btn btn-outline-custom btn-sm"><i class="bi bi-clipboard me-1"></i> Copy Technical Bio</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW FEATURE: AI Tailored Cover Letter Generator Card -->
+    <div id="cover-letter-section" class="card-custom p-4 p-md-5 mb-4 shadow-lg border-0 position-relative" style="background: rgba(255, 255, 255, 0.9);">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom">
+        <div>
+          <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill glass-badge small fw-bold mb-2 shadow-xs">
+            <span class="badge bg-primary rounded-pill px-2 py-0.5" style="font-size: 0.72rem;">✨ AI Multi-Feature</span>
+            <span>Cover Letter Copywriter</span>
+          </div>
+          <h2 class="h4 fw-extrabold text-dark mb-1">AI Tailored Cover Letter Generator</h2>
+          <p class="text-secondary small mb-0">Generate a compelling cover letter matching your resume achievements to this job posting.</p>
+        </div>
+        <div>
+          <button type="button" id="btn-generate-cover-letter" onclick="handleGenerateCoverLetter()" class="btn btn-primary-custom px-4 py-2.5 shadow-sm">
+            <i class="bi bi-magic me-1.5"></i> Generate Cover Letter
+          </button>
+        </div>
+      </div>
+
+      <!-- Generated Cover Letter Display Box -->
+      <div id="cover-letter-output" class="d-none">
+        <div class="p-4 p-md-5 rounded-3 mb-3 position-relative" style="background: #FFFFFF; border: 1px solid rgba(226, 232, 240, 0.9); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+          <!-- Letterhead Header -->
+          <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom text-secondary small">
+            <div>
+              <strong class="text-dark fs-6" id="letter-candidate-name">Candidate Name</strong>
+              <div id="letter-job-title" class="text-muted">Target Position</div>
+            </div>
+            <div id="letter-date" class="text-muted">August 31, 2026</div>
+          </div>
+
+          <!-- Letter Text Content -->
+          <div id="letter-body-text" class="text-dark fs-6" style="line-height: 1.8; white-space: pre-wrap; font-family: inherit;">
+            <!-- Populated via API -->
+          </div>
+        </div>
+
+        <!-- Action Toolbar -->
+        <div class="d-flex flex-wrap gap-2 justify-content-end">
+          <button type="button" onclick="copyCoverLetter()" id="btn-copy-letter" class="btn btn-outline-custom btn-sm py-2 px-3">
+            <i class="bi bi-clipboard me-1"></i> Copy Cover Letter
+          </button>
+          <button type="button" onclick="downloadCoverLetter()" class="btn btn-outline-custom btn-sm py-2 px-3">
+            <i class="bi bi-download me-1"></i> Download as .TXT
+          </button>
+          <button type="button" onclick="handleGenerateCoverLetter()" class="btn btn-outline-custom btn-sm py-2 px-3 text-primary">
+            <i class="bi bi-arrow-repeat me-1"></i> Regenerate
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW FEATURE: 1-Click Targeted Job Matcher & Search Links -->
+    <div class="card-custom p-4 p-md-5 mb-4 shadow-lg border-0" style="background: rgba(255, 255, 255, 0.95);">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom">
+        <div>
+          <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill glass-badge small fw-bold mb-2 shadow-xs">
+            <span class="badge bg-success rounded-pill px-2 py-0.5" style="font-size: 0.72rem;">🎯 Direct Apply</span>
+            <span>1-Click Live Job Matcher</span>
+          </div>
+          <h2 class="h4 fw-extrabold text-dark mb-1">Targeted Job Search Query Links</h2>
+          <p class="text-secondary small mb-0">Direct links pre-configured for your target position on top hiring platforms.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/resumes/builder/" class="btn btn-outline-custom px-3 py-2 shadow-xs">
+            <i class="bi bi-pencil-square me-1"></i> Open in Resume Builder
+          </a>
+        </div>
+      </div>
+
+      <div class="row g-3" id="job-search-links-grid">
+        <div class="col-sm-6 col-lg-3">
+          <a href="https://www.linkedin.com/jobs/search/?keywords=Software%20Engineer" target="_blank" rel="noopener noreferrer" id="job-link-linkedin" class="card-custom p-3 text-decoration-none d-flex align-items-center gap-3 h-100 hover-lift border">
+            <i class="bi bi-linkedin fs-2 text-primary"></i>
+            <div>
+              <strong class="text-dark small d-block">LinkedIn Jobs</strong>
+              <span class="text-muted" style="font-size: 0.72rem;">Live Postings ↗</span>
+            </div>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <a href="https://wellfound.com/jobs" target="_blank" rel="noopener noreferrer" id="job-link-wellfound" class="card-custom p-3 text-decoration-none d-flex align-items-center gap-3 h-100 hover-lift border">
+            <i class="bi bi-rocket-takeoff-fill fs-2 text-danger"></i>
+            <div>
+              <strong class="text-dark small d-block">Wellfound (AngelList)</strong>
+              <span class="text-muted" style="font-size: 0.72rem;">Top Startups ↗</span>
+            </div>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <a href="https://www.indeed.com/jobs?q=Software+Engineer" target="_blank" rel="noopener noreferrer" id="job-link-indeed" class="card-custom p-3 text-decoration-none d-flex align-items-center gap-3 h-100 hover-lift border">
+            <i class="bi bi-briefcase-fill fs-2 text-info"></i>
+            <div>
+              <strong class="text-dark small d-block">Indeed Jobs</strong>
+              <span class="text-muted" style="font-size: 0.72rem;">Global Listings ↗</span>
+            </div>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <a href="/tools/salary-estimator/" class="card-custom p-3 text-decoration-none d-flex align-items-center gap-3 h-100 hover-lift border">
+            <i class="bi bi-cash-stack fs-2 text-success"></i>
+            <div>
+              <strong class="text-dark small d-block">Salary Estimator</strong>
+              <span class="text-muted" style="font-size: 0.72rem;">Check Worth ↗</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Target Role & Mock Interview CTA Card -->
+    <div class="card-custom p-4 p-md-5 text-center border-primary shadow-lg" style="border-width: 2px; background: rgba(255, 255, 255, 0.9);">
+      <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-primary bg-primary-subtle mb-3 shadow-xs" style="width: 68px; height: 68px;">
+        <i class="bi bi-camera-video-fill fs-2"></i>
+      </div>
+      <h2 class="h4 fw-bold text-dark mb-2">Ready to Practice the Technical Round?</h2>
+      <p class="text-secondary small mb-4" style="max-width: 520px; margin: 0 auto; line-height: 1.6;">
+        Enter our Google Meet style live video room with webcam preview, voice speech recognition, and instant AI critique for this role.
+      </p>
+      <a href="#" id="btn-start-interview-bottom" class="btn btn-primary-custom btn-lg px-5 py-3 shadow">
+        <i class="bi bi-camera-video-fill me-1.5"></i> Launch Live Mock Interview Call
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let rawSuggestions = [];
+  let currentScanId = null;
+  let generatedLetterText = '';
+  let currentJobTitle = '';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    currentScanId = urlParams.get('id');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    if (!token) {
+      window.location.href = '/login/';
+      return;
+    }
+
+    if (!currentScanId) {
+      window.location.href = '/resumes/dashboard/';
+      return;
+    }
+
+    await loadScanReport(currentScanId, token);
+  });
+
+  function scrollToCoverLetter() {
+    const el = document.getElementById('cover-letter-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function loadScanReport(scanId, token) {
+    const loadingEl = document.getElementById('report-loading');
+    const contentEl = document.getElementById('report-content');
+
+    try {
+      const res = await fetch(`/api/v1/resumes/scan/${scanId}/`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      if (res.ok) {
+        const scan = await res.json();
+        loadingEl.classList.add('d-none');
+        contentEl.classList.remove('d-none');
+
+        currentJobTitle = scan.job_description_title || 'Target Position';
+        document.getElementById('report-title').textContent = `Scorecard: ${currentJobTitle}`;
+        document.getElementById('letter-job-title').textContent = `Application for: ${currentJobTitle}`;
+        document.getElementById('letter-date').textContent = new Date().toLocaleDateString('en-US', {
+          month: 'long', day: 'numeric', year: 'numeric'
+        });
+
+        const interviewUrl = `/interviews/setup/?role=${encodeURIComponent(currentJobTitle)}&resume_id=${scan.resume}`;
+        document.getElementById('btn-start-interview-top').href = interviewUrl;
+        document.getElementById('btn-start-interview-bottom').href = interviewUrl;
+
+        // Dynamic Job Search Links
+        const encodedRole = encodeURIComponent(currentJobTitle);
+        const linkedinEl = document.getElementById('job-link-linkedin');
+        if (linkedinEl) linkedinEl.href = `https://www.linkedin.com/jobs/search/?keywords=${encodedRole}`;
+        const indeedEl = document.getElementById('job-link-indeed');
+        if (indeedEl) indeedEl.href = `https://www.indeed.com/jobs?q=${encodedRole}`;
+        const wellfoundEl = document.getElementById('job-link-wellfound');
+        if (wellfoundEl) wellfoundEl.href = `https://wellfound.com/jobs?role=${encodedRole}`;
+
+        // Overall Score
+        const overallScore = scan.overall_score || 0;
+        document.getElementById('overall-score-value').textContent = `${overallScore}%`;
+
+        const circleEl = document.getElementById('overall-score-circle');
+        const verdictEl = document.getElementById('score-verdict');
+
+        circleEl.className = 'score-circle score-circle-lg mx-auto mb-3';
+        if (overallScore >= 80) {
+          circleEl.classList.add('score-high');
+          verdictEl.textContent = 'Excellent ATS Compliance (80%+)';
+          verdictEl.className = 'small fw-bold text-success';
+        } else if (overallScore >= 50) {
+          circleEl.classList.add('score-medium');
+          verdictEl.textContent = 'Moderate Match (50-79%) — Add Missing Skills Below';
+          verdictEl.className = 'small fw-bold text-warning';
+        } else {
+          circleEl.classList.add('score-low');
+          verdictEl.textContent = 'Low ATS Match (<50%) — Significant Keyword Gaps';
+          verdictEl.className = 'small fw-bold text-danger';
+        }
+
+        // Progress Bars
+        const kwScore = scan.keyword_score || 0;
+        const fmtScore = scan.formatting_score || 0;
+        const expScore = scan.experience_score || 0;
+
+        document.getElementById('keyword-score-text').textContent = `${kwScore}%`;
+        document.getElementById('keyword-progress-bar').style.width = `${kwScore}%`;
+
+        document.getElementById('formatting-score-text').textContent = `${fmtScore}%`;
+        document.getElementById('formatting-progress-bar').style.width = `${fmtScore}%`;
+
+        document.getElementById('experience-score-text').textContent = `${expScore}%`;
+        document.getElementById('experience-progress-bar').style.width = `${expScore}%`;
+
+        // Missing Keywords with Free Learning Courses
+        const missingGrid = document.getElementById('missing-keywords-grid');
+        missingGrid.innerHTML = '';
+        const missing = scan.missing_keywords || [];
+        document.getElementById('missing-count').textContent = `${missing.length} Missing`;
+
+        if (missing.length === 0) {
+          missingGrid.innerHTML = `
+            <div class="col-12">
+              <div class="p-3 rounded-3 bg-success-subtle text-success border border-success-subtle small fw-semibold">
+                <i class="bi bi-check-circle-fill me-1"></i> Great job! No major keyword gaps detected against this job description.
+              </div>
+            </div>
+          `;
+        } else {
+          missing.forEach(kw => {
+            const col = document.createElement('div');
+            col.className = 'col-sm-6 col-lg-4';
+            const ytQuery = encodeURIComponent(`learn ${kw} crash course tutorial`);
+            const ytUrl = `https://www.youtube.com/results?search_query=${ytQuery}`;
+            const roadmapUrl = `https://roadmap.sh`;
+
+            col.innerHTML = `
+              <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: rgba(254, 242, 242, 0.7); border: 1px solid rgba(254, 202, 202, 0.8);">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="badge bg-danger text-white rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">Missing Skill</span>
+                  <span class="small text-muted" style="font-size: 0.7rem;">High Priority</span>
+                </div>
+                <div class="fw-bold text-dark mb-2 fs-6">
+                  <i class="bi bi-code-square text-danger me-1"></i> ${kw}
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                  <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-sm w-100 py-1 px-2 text-white fw-semibold" style="background: #DC2626; font-size: 0.75rem; border-radius: 6px;">
+                    <i class="bi bi-youtube me-1"></i> Learn Free ↗
+                  </a>
+                </div>
+              </div>
+            `;
+            missingGrid.appendChild(col);
+          });
+        }
+
+        // Actionable Suggestions
+        const suggestionsList = document.getElementById('suggestions-list');
+        suggestionsList.innerHTML = '';
+        rawSuggestions = scan.suggestions || [];
+
+        if (rawSuggestions.length === 0) {
+          suggestionsList.innerHTML = '<li class="text-secondary small">Your resume matches the target job requirements closely.</li>';
+        } else {
+          rawSuggestions.forEach(sug => {
+            const li = document.createElement('li');
+            li.className = 'd-flex align-items-start gap-2 text-secondary small mb-2.5';
+            li.innerHTML = `<i class="bi bi-arrow-right-circle-fill text-primary mt-0.5 fs-6"></i> <span>${sug}</span>`;
+            suggestionsList.appendChild(li);
+          });
+        }
+
+        // Bullet Rewrites
+        const rewritesContainer = document.getElementById('bullet-rewrites-container');
+        rewritesContainer.innerHTML = '';
+        const rewrites = scan.bullet_rewrites || [];
+
+        if (rewrites.length === 0) {
+          rewritesContainer.innerHTML = '<div class="text-secondary small">No weak bullet points detected.</div>';
+        } else {
+          rewrites.forEach((rw, idx) => {
+            const item = document.createElement('div');
+            item.className = 'p-3 rounded-3 mb-3';
+            item.style.background = 'rgba(248, 250, 252, 0.85)';
+            item.style.border = '1px solid rgba(226, 232, 240, 0.9)';
+
+            item.innerHTML = `
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="small fw-bold text-danger mb-1"><i class="bi bi-x-circle-fill me-1"></i> Original / Generic Bullet:</div>
+                  <div class="p-2.5 rounded-2 bg-white text-secondary small border" style="font-size: 0.8125rem; min-height: 60px;">
+                    "${rw.before}"
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small fw-bold text-success"><i class="bi bi-check-circle-fill me-1"></i> AI Quantified Refactor (XYZ):</span>
+                    <button type="button" onclick="copyText('${encodeURIComponent(rw.after)}', this)" class="btn btn-outline-custom btn-xs py-0.5 px-2 text-primary" style="font-size: 0.72rem;">
+                      <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                  </div>
+                  <div class="p-2.5 rounded-2 text-dark small fw-medium border border-success-subtle" style="background: rgba(240, 253, 244, 0.9); font-size: 0.8125rem; min-height: 60px;">
+                    "${rw.after}"
+                  </div>
+                </div>
+              </div>
+              <div class="mt-2 pt-2 border-top small text-muted d-flex align-items-center gap-1.5" style="font-size: 0.75rem;">
+                <i class="bi bi-lightbulb-fill text-warning"></i> <strong>Why it wins:</strong> ${rw.impact_reason || 'Adds quantified metrics, modern tech keywords, and leadership power verbs.'}
+              </div>
+            `;
+            rewritesContainer.appendChild(item);
+          });
+        }
+      } else {
+        throw new Error('Report not found');
+      }
+    } catch (err) {
+      loadingEl.innerHTML = `<div class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i> Error loading report: ${err.message}</div>`;
+    }
+  }
+
+  let generatedBios = {};
+
+  async function handleGenerateLinkedInBio() {
+    const btn = document.getElementById('btn-gen-linkedin');
+    const loading = document.getElementById('linkedin-bio-loading');
+    const content = document.getElementById('linkedin-bio-content');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    btn.disabled = true;
+    loading.classList.remove('d-none');
+    content.classList.add('d-none');
+
+    try {
+      const res = await fetch('/api/v1/resumes/linkedin-bio/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ target_role: currentJobTitle })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        generatedBios = data;
+        document.getElementById('linkedin-punchy-text').textContent = data.punchy || '';
+        document.getElementById('linkedin-story-text').textContent = data.story || '';
+        document.getElementById('linkedin-tech-text').textContent = data.technical || '';
+        loading.classList.add('d-none');
+        content.classList.remove('d-none');
+        btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Regenerate Bio';
+      }
+    } catch (e) {
+      loading.classList.add('d-none');
+      alert('Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function copyLinkedInBio(type) {
+    const text = generatedBios[type] || '';
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('LinkedIn About section copied to clipboard!');
+    });
+  }
+
+  function copyText(encodedText, btn) {
+    const text = decodeURIComponent(encodedText);
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-check2 text-success"></i> Copied';
+      setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    });
+  }
+
+  async function handleGenerateCoverLetter() {
+    const btn = document.getElementById('btn-generate-cover-letter');
+    const outputBox = document.getElementById('cover-letter-output');
+    const bodyText = document.getElementById('letter-body-text');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5"></span> Writing Cover Letter with AI...';
+
+    try {
+      const res = await fetch(`/api/v1/resumes/scan/${currentScanId}/cover-letter/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        }
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        generatedLetterText = data.cover_letter;
+        document.getElementById('letter-candidate-name').textContent = data.candidate_name || 'Applicant';
+        bodyText.textContent = data.cover_letter;
+        outputBox.classList.remove('d-none');
+        btn.innerHTML = '<i class="bi bi-check2 text-success me-1"></i> Cover Letter Generated!';
+      } else {
+        alert('Failed to generate cover letter: ' + (data.detail || 'Server error'));
+        btn.innerHTML = '<i class="bi bi-magic me-1.5"></i> Generate Cover Letter';
+      }
+    } catch (err) {
+      alert('Network error: ' + err.message);
+      btn.innerHTML = '<i class="bi bi-magic me-1.5"></i> Generate Cover Letter';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function copyCoverLetter() {
+    if (!generatedLetterText) return;
+    navigator.clipboard.writeText(generatedLetterText).then(() => {
+      const btn = document.getElementById('btn-copy-letter');
+      btn.innerHTML = '<i class="bi bi-check2 text-success me-1"></i> Copied to Clipboard!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy Cover Letter';
+      }, 2000);
+    });
+  }
+
+  function downloadCoverLetter() {
+    if (!generatedLetterText) return;
+    const blob = new Blob([generatedLetterText], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Cover_Letter_${currentJobTitle.replace(/\s+/g, '_')}.txt`;
+    link.click();
+  }
+
+  function copySuggestionsToClipboard() {
+    if (!rawSuggestions || rawSuggestions.length === 0) return;
+    const text = rawSuggestions.map(s => `• ${s}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('btn-copy-sug');
+      btn.innerHTML = '<i class="bi bi-check2 text-success me-1"></i> Copied!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy Suggestions';
+      }, 2000);
+    });
+  }
+</script>
+{% endblock %}

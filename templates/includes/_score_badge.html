@@ -1,0 +1,8 @@
+{# Reusable ATS Score Circle Partial #}
+{# Parameters: score (int), size ('sm'|'md'|'lg'), label (str) #}
+<div class="score-circle {% if size == 'lg' %}score-circle-lg{% elif size == 'sm' %}score-circle-sm{% endif %} {% if score >= 80 %}score-high{% elif score >= 50 %}score-medium{% else %}score-low{% endif %}">
+  <span class="{% if size == 'lg' %}fs-2{% elif size == 'sm' %}fs-6{% else %}fs-4{% endif %} fw-bolder">{{ score|default:"0" }}%</span>
+  {% if size == 'lg' and label %}
+    <span class="text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">{{ label }}</span>
+  {% endif %}
+</div>

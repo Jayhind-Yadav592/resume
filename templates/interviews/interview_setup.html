@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+
+{% block title %}Google Meet Style AI Interview Lobby — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+  <!-- Lobby Header -->
+  <div class="text-center max-w-2xl mx-auto mb-4">
+    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill glass-badge small fw-bold mb-2 shadow-xs">
+      <span class="badge bg-danger rounded-pill px-2 py-0.5"><i class="bi bi-broadcast me-1"></i> LIVE ROOM</span>
+      <span>Google Meet Style AI Interview</span>
+    </div>
+    <h1 class="h3 fw-extrabold text-dark mb-1">Setup Your Mock Session</h1>
+    <p class="text-secondary small mb-0">Check your camera and microphone readiness before entering the live Google Meet interview room.</p>
+  </div>
+
+  <!-- Inline Alert Error -->
+  <div id="setup-alert" class="alert d-none mb-4 py-2 px-3 small rounded-3 max-w-4xl mx-auto" role="alert"></div>
+
+  <div class="row g-4 justify-content-center align-items-stretch max-w-5xl mx-auto">
+    <!-- Left Column: Google Meet Green Room Device Preview -->
+    <div class="col-lg-6">
+      <div class="card-custom h-100 p-4 d-flex flex-column justify-content-between shadow-lg border-0">
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="small fw-bold text-secondary text-uppercase" style="font-size: 0.75rem;">
+              <i class="bi bi-camera-video text-primary me-1"></i> Device & Camera Check
+            </span>
+            <span id="device-status-badge" class="badge bg-light text-secondary border rounded-pill small">
+              Checking devices...
+            </span>
+          </div>
+
+          <!-- Video Preview Tile -->
+          <div class="meet-tile mb-3" style="min-height: 280px; height: 280px; background: #0F172A;">
+            <video id="lobby-webcam" autoplay playsinline muted class="w-100 h-100"></video>
+            
+            <!-- Fallback when camera is off -->
+            <div id="lobby-cam-off-placeholder" class="d-none text-center text-white z-2 p-3">
+              <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-2" style="width: 64px; height: 64px;">
+                <i class="bi bi-camera-video-off fs-3"></i>
+              </div>
+              <div class="small fw-bold">Camera is turned off</div>
+              <div class="text-white-50 small" style="font-size: 0.75rem;">You can still speak your answers via microphone.</div>
+            </div>
+
+            <!-- Permission prompt banner -->
+            <div id="lobby-cam-permission-prompt" class="text-center text-white z-2 p-3">
+              <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-2" style="width: 56px; height: 56px;">
+                <i class="bi bi-webcam-fill fs-3"></i>
+              </div>
+              <div class="small fw-bold mb-1">Allow Camera & Microphone</div>
+              <button type="button" onclick="startLobbyMedia()" class="btn btn-primary-custom btn-sm py-1.5 px-3">
+                <i class="bi bi-shield-check me-1"></i> Test My Devices
+              </button>
+            </div>
+
+            <!-- Device Bottom Tag -->
+            <div class="meet-tile-tag">
+              <i class="bi bi-person-fill text-primary"></i> You (Candidate)
+            </div>
+          </div>
+
+          <!-- Device Control Buttons (Mic & Cam Toggles) -->
+          <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+            <button type="button" id="btn-toggle-lobby-mic" onclick="toggleLobbyMic()" class="meet-control-btn shadow-sm" title="Toggle Microphone">
+              <i class="bi bi-mic-fill text-dark"></i>
+            </button>
+            <button type="button" id="btn-toggle-lobby-cam" onclick="toggleLobbyCam()" class="meet-control-btn shadow-sm" title="Toggle Camera">
+              <i class="bi bi-camera-video-fill text-dark"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Audio Activity Meter -->
+        <div class="p-2.5 rounded-3 bg-light border">
+          <div class="d-flex justify-content-between small fw-bold text-secondary mb-1" style="font-size: 0.75rem;">
+            <span><i class="bi bi-soundwave text-success me-1"></i> Microphone Input Level</span>
+            <span id="audio-level-text" class="text-muted">Idle</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            <div id="audio-level-bar" class="progress-bar bg-success" style="width: 0%; transition: width 0.1s ease;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Role Setup & Launch -->
+    <div class="col-lg-6">
+      <div class="card-custom h-100 p-4 p-md-5 d-flex flex-column justify-content-between shadow-lg border-0">
+        <form id="setup-form" onsubmit="handleStartInterview(event)">
+          <div class="mb-4">
+            <div class="d-inline-flex align-items-center gap-2 text-primary small fw-bold mb-1">
+              <i class="bi bi-briefcase-fill"></i>
+              <span>Target Role Details</span>
+            </div>
+            <h2 class="h5 fw-bold text-dark mb-3">Configure Interview Position</h2>
+
+            <label for="interview-role" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.75rem;">
+              Target Job Title / Role
+            </label>
+            <div class="input-group mb-2">
+              <span class="input-group-text bg-white border-end-0 text-secondary" style="border-color: rgba(226, 232, 240, 0.8);"><i class="bi bi-briefcase"></i></span>
+              <input type="text" class="form-control border-start-0 ps-0 bg-white" id="interview-role" placeholder="e.g. Senior Django / Python Developer" required autofocus style="border-color: rgba(226, 232, 240, 0.8);">
+            </div>
+          </div>
+
+          <!-- Role Presets Grid -->
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-secondary text-uppercase mb-2" style="font-size: 0.75rem;">
+              Quick Role Presets
+            </label>
+            <div class="row g-2">
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-custom btn-sm w-100 text-start py-2 px-2" onclick="setRolePreset('Fullstack Python Developer')">
+                  <i class="bi bi-code-slash text-primary me-1"></i> Fullstack Python
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-custom btn-sm w-100 text-start py-2 px-2" onclick="setRolePreset('Backend Django & DRF Engineer')">
+                  <i class="bi bi-hdd-network text-primary me-1"></i> Backend Django
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-custom btn-sm w-100 text-start py-2 px-2" onclick="setRolePreset('Frontend React Specialist')">
+                  <i class="bi bi-window-fullscreen text-primary me-1"></i> React Frontend
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-custom btn-sm w-100 text-start py-2 px-2" onclick="setRolePreset('DevOps & Cloud Architect')">
+                  <i class="bi bi-cloud-check text-primary me-1"></i> DevOps & AWS
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" id="resume-id" value="">
+
+          <!-- Interview Structure Preview Card -->
+          <div class="p-3 rounded-3 bg-light border mb-4">
+            <h6 class="fw-bold text-dark small mb-1.5"><i class="bi bi-camera-video text-primary me-1"></i> Live Call Features:</h6>
+            <ul class="list-unstyled small text-secondary space-y-1 mb-0" style="font-size: 0.8125rem;">
+              <li class="mb-1"><i class="bi bi-check2 text-success me-1"></i> <strong>AI Interviewer Speaks Out Loud</strong> with live subtitles.</li>
+              <li class="mb-1"><i class="bi bi-check2 text-success me-1"></i> <strong>Real-Time Voice Recognition</strong> as you speak your responses.</li>
+              <li class="mb-0"><i class="bi bi-check2 text-success me-1"></i> <strong>Instant Critique & Scoring</strong> at the end of each round.</li>
+            </ul>
+          </div>
+
+          <!-- Join Button -->
+          <button type="submit" id="btn-start-session" class="btn btn-primary-custom w-100 py-3 shadow-lg fs-6">
+            <i class="bi bi-camera-video-fill me-1.5"></i> Join Live Interview Call
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let localStream = null;
+  let isMicActive = true;
+  let isCamActive = true;
+  let audioContext = null;
+  let analyser = null;
+  let animFrameId = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('resumeforge_access_token');
+    if (!token) {
+      window.location.href = '/login/';
+      return;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleParam = urlParams.get('role');
+    const resumeIdParam = urlParams.get('resume_id');
+
+    if (roleParam) {
+      document.getElementById('interview-role').value = decodeURIComponent(roleParam);
+    }
+    if (resumeIdParam) {
+      document.getElementById('resume-id').value = resumeIdParam;
+    }
+
+    // Auto-test media if permissions were previously granted
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      startLobbyMedia();
+    }
+  });
+
+  async function startLobbyMedia() {
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      });
+
+      const videoEl = document.getElementById('lobby-webcam');
+      videoEl.srcObject = localStream;
+      document.getElementById('lobby-cam-permission-prompt').classList.add('d-none');
+      document.getElementById('device-status-badge').className = 'badge bg-success-subtle text-success border border-success-subtle rounded-pill small';
+      document.getElementById('device-status-badge').textContent = 'Camera & Mic Ready';
+
+      setupAudioMeter(localStream);
+    } catch (err) {
+      console.warn('Lobby media access notice:', err);
+      document.getElementById('device-status-badge').className = 'badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill small';
+      document.getElementById('device-status-badge').textContent = 'Text/Mic Mode Ready';
+      document.getElementById('lobby-cam-permission-prompt').innerHTML = `
+        <div class="text-warning small fw-bold mb-1"><i class="bi bi-info-circle me-1"></i> Camera optional</div>
+        <div class="text-white-50 small" style="font-size: 0.75rem;">You can proceed to interview with or without camera.</div>
+      `;
+    }
+  }
+
+  function setupAudioMeter(stream) {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      analyser.fftSize = 256;
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const levelBar = document.getElementById('audio-level-bar');
+      const levelText = document.getElementById('audio-level-text');
+
+      function checkAudio() {
+        if (!isMicActive) {
+          levelBar.style.width = '0%';
+          levelText.textContent = 'Muted';
+          animFrameId = requestAnimationFrame(checkAudio);
+          return;
+        }
+
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const avg = sum / dataArray.length;
+        const percent = Math.min(Math.round((avg / 128) * 100), 100);
+
+        levelBar.style.width = `${percent}%`;
+        if (percent > 10) {
+          levelText.textContent = 'Active (Sound detected)';
+          levelText.className = 'text-success fw-bold';
+        } else {
+          levelText.textContent = 'Ready';
+          levelText.className = 'text-muted';
+        }
+
+        animFrameId = requestAnimationFrame(checkAudio);
+      }
+
+      checkAudio();
+    } catch (e) {}
+  }
+
+  function toggleLobbyMic() {
+    isMicActive = !isMicActive;
+    if (localStream) {
+      localStream.getAudioTracks().forEach(t => t.enabled = isMicActive);
+    }
+    const btn = document.getElementById('btn-toggle-lobby-mic');
+    if (isMicActive) {
+      btn.className = 'meet-control-btn shadow-sm';
+      btn.innerHTML = '<i class="bi bi-mic-fill text-dark"></i>';
+    } else {
+      btn.className = 'meet-control-btn active-off shadow-sm';
+      btn.innerHTML = '<i class="bi bi-mic-mute-fill"></i>';
+    }
+  }
+
+  function toggleLobbyCam() {
+    isCamActive = !isCamActive;
+    if (localStream) {
+      localStream.getVideoTracks().forEach(t => t.enabled = isCamActive);
+    }
+    const videoEl = document.getElementById('lobby-webcam');
+    const placeholder = document.getElementById('lobby-cam-off-placeholder');
+    const btn = document.getElementById('btn-toggle-lobby-cam');
+
+    if (isCamActive) {
+      videoEl.classList.remove('d-none');
+      placeholder.classList.add('d-none');
+      btn.className = 'meet-control-btn shadow-sm';
+      btn.innerHTML = '<i class="bi bi-camera-video-fill text-dark"></i>';
+    } else {
+      videoEl.classList.add('d-none');
+      placeholder.classList.remove('d-none');
+      btn.className = 'meet-control-btn active-off shadow-sm';
+      btn.innerHTML = '<i class="bi bi-camera-video-off-fill"></i>';
+    }
+  }
+
+  function setRolePreset(roleName) {
+    document.getElementById('interview-role').value = roleName;
+  }
+
+  async function handleStartInterview(e) {
+    e.preventDefault();
+    const role = document.getElementById('interview-role').value.trim();
+    const resumeIdVal = document.getElementById('resume-id').value.trim();
+    const alertBox = document.getElementById('setup-alert');
+    const btn = document.getElementById('btn-start-session');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    // Clean up lobby media stream before navigating
+    if (localStream) {
+      localStream.getTracks().forEach(t => t.stop());
+    }
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    if (audioContext) audioContext.close();
+
+    alertBox.classList.add('d-none');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Connecting to Live Meeting Room...';
+
+    const payload = { job_role: role };
+    if (resumeIdVal && !isNaN(parseInt(resumeIdVal))) {
+      payload.resume_id = parseInt(resumeIdVal);
+    }
+
+    try {
+      const res = await fetch('/api/v1/interviews/start/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        window.location.href = `/interviews/chat/?id=${data.id}`;
+      } else {
+        alertBox.className = 'alert alert-danger py-2 px-3 small rounded-3 max-w-4xl mx-auto';
+        alertBox.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i> ${data.detail || JSON.stringify(data)}`;
+        alertBox.classList.remove('d-none');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-camera-video-fill me-1.5"></i> Join Live Interview Call';
+      }
+    } catch (err) {
+      alertBox.className = 'alert alert-danger py-2 px-3 small rounded-3 max-w-4xl mx-auto';
+      alertBox.innerHTML = `<i class="bi bi-wifi-off me-1"></i> Network error: ${err.message}`;
+      alertBox.classList.remove('d-none');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-camera-video-fill me-1.5"></i> Join Live Interview Call';
+    }
+  }
+</script>
+{% endblock %}

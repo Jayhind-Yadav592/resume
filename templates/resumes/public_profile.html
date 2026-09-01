@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Verified Candidate Profile — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5 max-w-3xl mx-auto">
+  <!-- Profile Showcase Card -->
+  <div class="card-custom p-4 p-md-5 shadow-lg border-0 mb-4 position-relative" style="background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 pb-4 mb-4 border-bottom">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold fs-3 shadow-sm" style="width: 72px; height: 72px; background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);">
+          <span id="prof-initials">U</span>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <h1 class="h4 fw-extrabold text-dark mb-0" id="prof-name">Candidate Name</h1>
+            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small">
+              <i class="bi bi-patch-check-fill me-1"></i> Verified
+            </span>
+          </div>
+          <div class="text-secondary small" id="prof-username">@username • Software Engineer</div>
+        </div>
+      </div>
+      <div>
+        <button type="button" onclick="copyProfileLink()" id="btn-copy-prof" class="btn btn-outline-custom btn-sm px-3 shadow-xs">
+          <i class="bi bi-share me-1"></i> Share Profile
+        </button>
+      </div>
+    </div>
+
+    <!-- Verified Metrics Row -->
+    <div class="row text-center g-3 mb-4">
+      <div class="col-4">
+        <div class="p-3 rounded-3 bg-light border">
+          <div class="h3 fw-extrabold text-primary mb-0" id="prof-score">88%</div>
+          <div class="text-muted" style="font-size: 0.72rem;">Top ATS Match</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="p-3 rounded-3 bg-light border">
+          <div class="h3 fw-extrabold text-success mb-0" id="prof-scans">12</div>
+          <div class="text-muted" style="font-size: 0.72rem;">Verified Scans</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="p-3 rounded-3 bg-light border">
+          <div class="h3 fw-extrabold text-warning mb-0">Top 10%</div>
+          <div class="text-muted" style="font-size: 0.72rem;">Dev Tier</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core Skills Badges -->
+    <div class="mb-4">
+      <h2 class="fs-6 fw-bold text-dark mb-2">Verified Technical Stack:</h2>
+      <div class="d-flex flex-wrap gap-1.5" id="prof-skills-container">
+        <!-- Populated via JS -->
+      </div>
+    </div>
+
+    <!-- Verified Badges -->
+    <div class="mb-4">
+      <h2 class="fs-6 fw-bold text-dark mb-2">Candidate Badges:</h2>
+      <div class="d-flex flex-wrap gap-2">
+        <div class="p-2.5 rounded-3 bg-white border d-flex align-items-center gap-2">
+          <i class="bi bi-patch-check-fill text-success fs-5"></i>
+          <div>
+            <div class="fw-bold small text-dark">ATS Screening Verified</div>
+            <div class="text-muted" style="font-size: 0.7rem;">Compliance verified against modern applicant tracking systems</div>
+          </div>
+        </div>
+        <div class="p-2.5 rounded-3 bg-white border d-flex align-items-center gap-2">
+          <i class="bi bi-camera-video-fill text-primary fs-5"></i>
+          <div>
+            <div class="fw-bold small text-dark">AI Technical Mock Ready</div>
+            <div class="text-muted" style="font-size: 0.7rem;">Completed multi-turn architectural Q&A evaluation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA for Recruiters -->
+    <div class="p-3.5 rounded-3 text-center" style="background: rgba(238, 242, 255, 0.85); border: 1px solid rgba(199, 210, 254, 0.8);">
+      <h3 class="fs-6 fw-bold text-dark mb-1">Interested in interviewing this candidate?</h3>
+      <p class="text-secondary small mb-3" style="font-size: 0.8125rem;">Candidate is actively exploring Software Engineering & Fullstack opportunities.</p>
+      <a href="mailto:candidate@example.com" class="btn btn-primary-custom btn-sm px-4 shadow-sm">
+        <i class="bi bi-envelope-fill me-1.5"></i> Contact via Email
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const pathParts = window.location.pathname.split('/').filter(p => p);
+    const username = pathParts[pathParts.length - 1] || 'rajesh';
+
+    try {
+      const res = await fetch(`/api/v1/resumes/profile/${username}/`);
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('prof-name').textContent = data.full_name || data.username;
+        document.getElementById('prof-username').textContent = `@${data.username} • Software Engineer`;
+        document.getElementById('prof-initials').textContent = (data.full_name || data.username).substring(0, 1).toUpperCase();
+        document.getElementById('prof-score').textContent = `${data.top_ats_score}%`;
+        document.getElementById('prof-scans').textContent = data.total_verified_scans || 1;
+
+        const skillsContainer = document.getElementById('prof-skills-container');
+        skillsContainer.innerHTML = '';
+        (data.skills || []).forEach(s => {
+          const span = document.createElement('span');
+          span.className = 'badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 rounded-pill small';
+          span.textContent = s;
+          skillsContainer.appendChild(span);
+        });
+      }
+    } catch (e) {}
+  });
+
+  function copyProfileLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = document.getElementById('btn-copy-prof');
+      btn.innerHTML = '<i class="bi bi-check2 text-success me-1"></i> Link Copied!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="bi bi-share me-1"></i> Share Profile';
+      }, 2000);
+    });
+  }
+</script>
+{% endblock %}

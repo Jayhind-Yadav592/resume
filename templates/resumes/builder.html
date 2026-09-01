@@ -1,0 +1,1025 @@
+{% extends 'base.html' %}
+
+{% block title %}ATS Resume Studio — ResumeForge AI{% endblock %}
+
+{% block extra_head %}
+<!-- html2pdf.js for pixel-perfect standard A4 ATS PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+  /* ==========================================================================
+     Professional SaaS Resume Studio & LaTeX Canvas Design System
+     ========================================================================== */
+  .studio-container {
+    padding-top: 1rem;
+    padding-bottom: 3rem;
+  }
+
+  /* Top Studio Toolbar */
+  .studio-toolbar {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 0.85rem 1.4rem;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  /* Section Accordion Card in Editor */
+  .editor-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+  }
+
+  .editor-header {
+    padding: 1rem 1.25rem;
+    background: #FFFFFF;
+    border-bottom: 1px solid #F1F5F9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .accordion-item-custom {
+    border: 1px solid #E2E8F0;
+    border-radius: 8px !important;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    background: #FFFFFF;
+  }
+
+  .accordion-button-custom {
+    background: #F8FAFC;
+    color: #0F172A;
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .accordion-button-custom:hover {
+    background: #F1F5F9;
+  }
+
+  .accordion-button-custom i {
+    color: #4F46E5;
+    font-size: 1rem;
+  }
+
+  .accordion-body-custom {
+    padding: 1rem;
+    background: #FFFFFF;
+  }
+
+  .form-control-custom {
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    padding: 0.45rem 0.65rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .form-control-custom:focus {
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    outline: none;
+  }
+
+  .form-label-custom {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  /* Repeatable Entry Box (Experience / Projects / Education) */
+  .entry-box {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 0.85rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+  }
+
+  .entry-box-delete {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    color: #94A3B8;
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .entry-box-delete:hover {
+    color: #EF4444;
+  }
+
+  .btn-add-item {
+    border: 1px dashed #CBD5E1;
+    background: #F8FAFC;
+    color: #4F46E5;
+    font-weight: 600;
+    font-size: 0.78rem;
+    border-radius: 6px;
+    padding: 0.45rem 0.85rem;
+    width: 100%;
+    transition: all 0.15s ease;
+  }
+
+  .btn-add-item:hover {
+    background: #EEF2FF;
+    border-color: #4F46E5;
+    color: #4338CA;
+  }
+
+  /* ==========================================================================
+     Real-Time A4 Document Paper Canvas
+     ========================================================================== */
+  .paper-canvas-wrapper {
+    background: #64748B;
+    background: radial-gradient(#CBD5E1 1px, #F1F5F9 1px);
+    background-size: 16px 16px;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 85vh;
+    overflow-y: auto;
+  }
+
+  #resume-document-preview {
+    background: #FFFFFF;
+    color: #000000;
+    font-family: 'Times New Roman', Times, Georgia, serif;
+    line-height: 1.35;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 794px; /* Standard A4 paper width */
+    min-height: 1123px; /* Standard A4 paper height */
+    padding: 38px 46px;
+    border-radius: 2px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+  }
+
+  /* Resume Typography Elements */
+  .resume-name {
+    font-size: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: center;
+    color: #000000;
+    margin-bottom: 5px;
+  }
+
+  .resume-contact-bar {
+    font-size: 11px;
+    text-align: center;
+    color: #000000;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px 10px;
+    margin-bottom: 10px;
+  }
+
+  .resume-contact-bar a {
+    color: #000000;
+    text-decoration: none;
+  }
+
+  .resume-contact-bar a:hover {
+    text-decoration: underline;
+  }
+
+  .contact-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  /* Section Title with Horizontal Rule (Classic LaTeX Style) */
+  .resume-section-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #000000;
+    border-bottom: 1.5px solid #000000;
+    padding-bottom: 2px;
+    margin-top: 9px;
+    margin-bottom: 5px;
+  }
+
+  .resume-summary-text {
+    font-size: 11.5px;
+    font-style: italic;
+    color: #000000;
+    text-align: justify;
+    line-height: 1.38;
+    margin-bottom: 6px;
+  }
+
+  .resume-entry {
+    margin-bottom: 7px;
+  }
+
+  .resume-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11.5px;
+  }
+
+  .resume-entry-title {
+    font-weight: 700;
+    color: #000000;
+  }
+
+  .resume-entry-dates {
+    font-size: 11px;
+    font-weight: 600;
+    color: #000000;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .resume-entry-sub {
+    font-size: 11.5px;
+    font-style: italic;
+    color: #000000;
+    margin-bottom: 2px;
+  }
+
+  .resume-bullets-list {
+    list-style-type: square;
+    padding-left: 18px;
+    margin-top: 2px;
+    margin-bottom: 4px;
+  }
+
+  .resume-bullet-point {
+    font-size: 11px;
+    color: #000000;
+    line-height: 1.36;
+    margin-bottom: 2px;
+    text-align: justify;
+  }
+
+  .skills-bullet-list {
+    list-style-type: square;
+    padding-left: 18px;
+    margin-top: 2px;
+    margin-bottom: 4px;
+  }
+
+  .skills-bullet-item {
+    font-size: 11px;
+    color: #000000;
+    line-height: 1.36;
+    margin-bottom: 2px;
+  }
+
+  /* Template Variant: Modern Tech Sans-Serif */
+  .template-tech-sans {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+  .template-tech-sans .resume-section-title {
+    border-bottom: 2px solid #4F46E5 !important;
+    color: #4F46E5 !important;
+  }
+  .template-tech-sans .resume-bullets-list,
+  .template-tech-sans .skills-bullet-list {
+    list-style-type: disc !important;
+  }
+
+  /* Print Stylesheet */
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #resume-document-preview, #resume-document-preview * {
+      visibility: visible;
+    }
+    #resume-document-preview {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      box-shadow: none;
+      border: none;
+      padding: 0;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 studio-container">
+  <!-- Top Professional Studio Toolbar -->
+  <div class="studio-toolbar">
+    <div class="d-flex align-items-center gap-3">
+      <a href="/resumes/dashboard/" class="btn btn-outline-custom btn-sm py-1.5 px-2.5" title="Back to Dashboard">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h1 class="h5 fw-extrabold text-dark mb-0">ATS Resume Studio</h1>
+          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-0.5 small" style="font-size: 0.72rem;">
+            <i class="bi bi-shield-check me-1"></i> ATS 100% Score
+          </span>
+        </div>
+        <div class="text-secondary small" style="font-size: 0.75rem;">Interactive Live Editor • Standard Single-Column LaTeX Engine</div>
+      </div>
+    </div>
+
+    <!-- Action Toolbar Right -->
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <!-- 1-Click Auto-Tailor AI Button -->
+      <button type="button" onclick="openAutoTailorModal()" class="btn btn-outline-custom btn-sm px-3 shadow-xs">
+        <i class="bi bi-magic text-primary me-1.5"></i> Auto-Tailor with JD
+      </button>
+
+      <!-- Load Sample Template Button -->
+      <button type="button" onclick="loadSampleJayhindData()" class="btn btn-outline-custom btn-sm px-3 shadow-xs">
+        <i class="bi bi-arrow-clockwise text-secondary me-1.5"></i> Reset / Load Template
+      </button>
+
+      <!-- Font / Style Switcher -->
+      <select id="select-template" onchange="changeTemplateStyle(this.value)" class="form-select form-select-sm bg-white" style="max-width: 180px; border-color: #CBD5E1;">
+        <option value="template-latex-serif">Standard LaTeX (Serif)</option>
+        <option value="template-tech-sans">Modern Tech (Sans-Serif)</option>
+      </select>
+
+      <!-- Download PDF Button -->
+      <button type="button" onclick="downloadResumePDF()" id="btn-download-pdf" class="btn btn-primary-custom btn-sm px-3.5 shadow-sm">
+        <i class="bi bi-download me-1.5"></i> Download ATS PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- 2-Column Studio Grid: Left Accordion Editor & Right Paper Canvas -->
+  <div class="row g-4">
+    <!-- Left Column: Professional Accordion Editor -->
+    <div class="col-lg-5 col-xl-5">
+      <div class="editor-card" style="max-height: 85vh; overflow-y: auto;">
+        <div class="editor-header">
+          <div class="fw-bold text-dark small d-flex align-items-center gap-2">
+            <i class="bi bi-sliders text-primary"></i> Content Editor Sections
+          </div>
+          <span class="text-muted small" style="font-size: 0.72rem;">Changes auto-saved live</span>
+        </div>
+
+        <div class="p-3">
+          <!-- Accordion 1: Personal & Contact Links -->
+          <div class="accordion-item-custom">
+            <div class="accordion-button-custom" onclick="toggleSection('sec-contact')">
+              <span><i class="bi bi-person-lines-fill me-2"></i> 1. Personal & Contact Bar</span>
+              <i class="bi bi-chevron-down text-muted small" id="icon-sec-contact"></i>
+            </div>
+            <div id="sec-contact" class="accordion-body-custom">
+              <div class="row g-2 mb-2">
+                <div class="col-12">
+                  <label class="form-label-custom">Full Name</label>
+                  <input type="text" id="inp-name" oninput="updatePreview()" class="form-control form-control-custom" placeholder="JAYHIND YADAV">
+                </div>
+                <div class="col-6">
+                  <label class="form-label-custom">Phone Number</label>
+                  <input type="text" id="inp-phone" oninput="updatePreview()" class="form-control form-control-custom" placeholder="+91 6393496909">
+                </div>
+                <div class="col-6">
+                  <label class="form-label-custom">Email Address</label>
+                  <input type="email" id="inp-email" oninput="updatePreview()" class="form-control form-control-custom" placeholder="jayhind01022003@gmail.com">
+                </div>
+                <div class="col-4">
+                  <label class="form-label-custom">LinkedIn Link</label>
+                  <input type="text" id="inp-linkedin" oninput="updatePreview()" class="form-control form-control-custom" placeholder="| LinkedIn |">
+                </div>
+                <div class="col-4">
+                  <label class="form-label-custom">GitHub Link</label>
+                  <input type="text" id="inp-github" oninput="updatePreview()" class="form-control form-control-custom" placeholder="| GitHub |">
+                </div>
+                <div class="col-4">
+                  <label class="form-label-custom">Portfolio Link</label>
+                  <input type="text" id="inp-portfolio" oninput="updatePreview()" class="form-control form-control-custom" placeholder="| Portfolio |">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion 2: Professional Summary -->
+          <div class="accordion-item-custom">
+            <div class="accordion-button-custom" onclick="toggleSection('sec-summary')">
+              <span><i class="bi bi-card-text me-2"></i> 2. Professional Summary</span>
+              <i class="bi bi-chevron-down text-muted small" id="icon-sec-summary"></i>
+            </div>
+            <div id="sec-summary" class="accordion-body-custom">
+              <label class="form-label-custom">Value Statement / Objective</label>
+              <textarea id="inp-summary" oninput="updatePreview()" class="form-control form-control-custom mb-2" rows="3" placeholder="Brief statement highlighting your core specialization, passion, and backend/frontend capabilities..."></textarea>
+              <button type="button" onclick="aiEnhanceSummary()" class="btn btn-outline-custom btn-sm py-1 px-2.5 small" style="font-size: 0.75rem;">
+                <i class="bi bi-stars text-primary me-1"></i> AI Polish Summary
+              </button>
+            </div>
+          </div>
+
+          <!-- Accordion 3: Technical Skills (Categorized) -->
+          <div class="accordion-item-custom">
+            <div class="accordion-button-custom" onclick="toggleSection('sec-skills')">
+              <span><i class="bi bi-tools me-2"></i> 3. Technical Skills (Categorized)</span>
+              <i class="bi bi-chevron-down text-muted small" id="icon-sec-skills"></i>
+            </div>
+            <div id="sec-skills" class="accordion-body-custom">
+              <div class="mb-2">
+                <label class="form-label-custom">Programming Languages</label>
+                <input type="text" id="inp-skills-lang" oninput="updatePreview()" class="form-control form-control-custom" placeholder="Python, JavaScript, MySQL, PostgreSQL, HTML, CSS">
+              </div>
+              <div class="mb-2">
+                <label class="form-label-custom">Framework / Tools</label>
+                <input type="text" id="inp-skills-tools" oninput="updatePreview()" class="form-control form-control-custom" placeholder="Django, DRF, Bootstrap, GitHUB, VS Code, Postman, Linux, Docker">
+              </div>
+              <div>
+                <label class="form-label-custom">Technical Proficiencies</label>
+                <input type="text" id="inp-skills-pro" oninput="updatePreview()" class="form-control form-control-custom" placeholder="Data Structures and Algorithms, Object-Oriented Programming, REST APIs, Backend Development">
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion 4: Education -->
+          <div class="accordion-item-custom">
+            <div class="accordion-button-custom" onclick="toggleSection('sec-edu')">
+              <span><i class="bi bi-mortarboard-fill me-2"></i> 4. Education</span>
+              <i class="bi bi-chevron-down text-muted small" id="icon-sec-edu"></i>
+            </div>
+            <div id="sec-edu" class="accordion-body-custom">
+              <div id="education-entries-editor">
+                <!-- Populated dynamically via JS -->
+              </div>
+              <button type="button" onclick="addEducationEntry()" class="btn-add-item mt-1">
+                <i class="bi bi-plus-circle me-1"></i> Add Education Degree
+              </button>
+            </div>
+          </div>
+
+          <!-- Accordion 5: Experience -->
+          <div class="accordion-item-custom">
+            <div class="accordion-button-custom" onclick="toggleSection('sec-exp')">
+              <span><i class="bi bi-briefcase-fill me-2"></i> 5. Work Experience</span>
+              <i class="bi bi-chevron-down text-muted small" id="icon-sec-exp"></i>
+            </div>
+            <div id="sec-exp" class="accordion-body-custom">
+              <div id="experience-entries-editor">
+                <!-- Populated dynamically via JS -->
+              </div>
+              <button type="button" onclick="addExperienceEntry()" class="btn-add-item mt-1">
+                <i class="bi bi-plus-circle me-1"></i> Add Experience Role
+              </button>
+            </div>
+          </div>
+
+          <!-- Accordion 6: Key Projects -->
+          <div class="accordion-item-custom">
+            <div class="accordion-button-custom" onclick="toggleSection('sec-proj')">
+              <span><i class="bi bi-code-square me-2"></i> 6. Key Projects</span>
+              <i class="bi bi-chevron-down text-muted small" id="icon-sec-proj"></i>
+            </div>
+            <div id="sec-proj" class="accordion-body-custom">
+              <div id="projects-entries-editor">
+                <!-- Populated dynamically via JS -->
+              </div>
+              <button type="button" onclick="addProjectEntry()" class="btn-add-item mt-1">
+                <i class="bi bi-plus-circle me-1"></i> Add Project
+              </button>
+            </div>
+          </div>
+
+          <!-- Accordion 7: Certifications & Awards -->
+          <div class="accordion-item-custom">
+            <div class="accordion-button-custom" onclick="toggleSection('sec-certs')">
+              <span><i class="bi bi-award-fill me-2"></i> 7. Certification & Awards</span>
+              <i class="bi bi-chevron-down text-muted small" id="icon-sec-certs"></i>
+            </div>
+            <div id="sec-certs" class="accordion-body-custom">
+              <label class="form-label-custom">Certifications (One per line)</label>
+              <textarea id="inp-certs" oninput="updatePreview()" class="form-control form-control-custom" rows="3" placeholder="Certification of Completion – Web Development Fundamentals (2025)..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Real-Time A4 Document Paper Canvas -->
+    <div class="col-lg-7 col-xl-7">
+      <div class="paper-canvas-wrapper">
+        <div id="resume-document-preview" class="template-latex-serif">
+          <!-- 1. Header (Centered Name + Contact Bar) -->
+          <div class="resume-name" id="prev-name">JAYHIND YADAV</div>
+          <div class="resume-contact-bar">
+            <span class="contact-item" id="prev-phone-container">
+              <i class="bi bi-telephone-fill"></i> <span id="prev-phone">+91 6393496909</span>
+            </span>
+            <span class="contact-item" id="prev-email-container">
+              <i class="bi bi-envelope-fill"></i> <span id="prev-email">jayhind01022003@gmail.com</span>
+            </span>
+            <span class="contact-item" id="prev-linkedin-container">
+              <i class="bi bi-linkedin"></i> <a href="#" id="prev-linkedin">| LinkedIn |</a>
+            </span>
+            <span class="contact-item" id="prev-github-container">
+              <i class="bi bi-github"></i> <a href="#" id="prev-github">| GitHub |</a>
+            </span>
+            <span class="contact-item" id="prev-portfolio-container">
+              <i class="bi bi-briefcase-fill"></i> <a href="#" id="prev-portfolio">| Portfolio |</a>
+            </span>
+          </div>
+
+          <!-- 2. Summary -->
+          <div class="resume-section-title">Summary</div>
+          <div class="resume-summary-text" id="prev-summary">
+            I am a Full Stack Developer specializing in Python development with a strong passion for competitive programming. I have a solid understanding of Python and am highly enthusiastic about backend development.
+          </div>
+
+          <!-- 3. Technical Skills -->
+          <div class="resume-section-title">TECHNICAL SKILLS</div>
+          <ul class="skills-bullet-list" id="prev-skills-list">
+            <li class="skills-bullet-item">
+              <strong>Programming Languages:</strong> <span id="prev-skills-lang">Python, JavaScript, MySQL, PostgreSQL, HTML, CSS</span>
+            </li>
+            <li class="skills-bullet-item">
+              <strong>Framework/Tools:</strong> <span id="prev-skills-tools">Django, DRF, Bootstrap, GitHUB, VS Code, Postman, Linux, Docker</span>
+            </li>
+            <li class="skills-bullet-item">
+              <strong>Technical Proficiencies:</strong> <span id="prev-skills-pro">Data Structures and Algorithms, Object-Oriented Programming, REST APIs, Backend Development</span>
+            </li>
+          </ul>
+
+          <!-- 4. Education -->
+          <div class="resume-section-title">EDUCATION</div>
+          <div id="prev-education-container"></div>
+
+          <!-- 5. Experience -->
+          <div class="resume-section-title">EXPERIENCE</div>
+          <div id="prev-experience-container"></div>
+
+          <!-- 6. Projects -->
+          <div class="resume-section-title">PROJECTS</div>
+          <div id="prev-projects-container"></div>
+
+          <!-- 7. Certification and Awards -->
+          <div class="resume-section-title">CERTIFICATION AND AWARDS</div>
+          <ul class="resume-bullets-list mb-0" id="prev-certs-list"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 1-Click Auto-Tailor with JD -->
+<div class="modal fade" id="autoTailorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content card-custom border-0 shadow-lg">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+          <i class="bi bi-magic text-primary"></i> 1-Click Auto-Tailor Resume to Job Description
+        </h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="text-secondary small mb-3">
+          Paste the job requirements from LinkedIn or company careers page. Our AI will automatically rewrite and restructure your resume bullets with target keywords and quantifiable metrics!
+        </p>
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-dark">Target Job Description (JD):</label>
+          <textarea id="modal-jd-text" class="form-control small" rows="6" placeholder="Paste the job description or requirements here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-outline-custom btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" onclick="executeAutoTailor()" id="btn-execute-tailor" class="btn btn-primary-custom btn-sm px-4">
+          <i class="bi bi-magic me-1"></i> Auto-Tailor Resume
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let tailorModalInstance = null;
+
+  // Dynamic Array Models
+  let educationList = [];
+  let experienceList = [];
+  let projectList = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    tailorModalInstance = new bootstrap.Modal(document.getElementById('autoTailorModal'));
+    loadSampleJayhindData();
+  });
+
+  function toggleSection(secId) {
+    const el = document.getElementById(secId);
+    const icon = document.getElementById(`icon-${secId}`);
+    if (el.classList.contains('d-none')) {
+      el.classList.remove('d-none');
+      if (icon) icon.className = 'bi bi-chevron-down text-muted small';
+    } else {
+      el.classList.add('d-none');
+      if (icon) icon.className = 'bi bi-chevron-right text-muted small';
+    }
+  }
+
+  function loadSampleJayhindData() {
+    // 1. Personal Info
+    document.getElementById('inp-name').value = "JAYHIND YADAV";
+    document.getElementById('inp-phone').value = "+91 6393496909";
+    document.getElementById('inp-email').value = "jayhind01022003@gmail.com";
+    document.getElementById('inp-linkedin').value = "| LinkedIn |";
+    document.getElementById('inp-github').value = "| GitHub |";
+    document.getElementById('inp-portfolio').value = "| Portfolio |";
+
+    // 2. Summary
+    document.getElementById('inp-summary').value = "I am a Full Stack Developer specializing in Python development with a strong passion for competitive programming. I have a solid understanding of Python and am highly enthusiastic about backend development.";
+
+    // 3. Technical Skills
+    document.getElementById('inp-skills-lang').value = "Python, JavaScript, MySQL, PostgreSQL, HTML, CSS";
+    document.getElementById('inp-skills-tools').value = "Django, DRF, Bootstrap, GitHUB, VS Code, Postman, Linux, Docker";
+    document.getElementById('inp-skills-pro').value = "Data Structures and Algorithms, Object-Oriented Programming, REST APIs, Backend Development";
+
+    // 4. Education Array
+    educationList = [
+      {
+        school: "Kasireddy Narayanreddy College of Engineering and Research",
+        dates: "Nov 2022 - Aug 2026",
+        degree: "Bachelor of Engineering in Computer Science Engineering"
+      },
+      {
+        school: "J.P Inter College",
+        dates: "Mar- 2022",
+        degree: "Secondary Education, Uttar Pradesh"
+      },
+      {
+        school: "Chacha Nehru Hindi High School",
+        dates: "Mar- 2020",
+        degree: "SSC, Maharashtra"
+      }
+    ];
+
+    // 5. Experience Array
+    experienceList = [
+      {
+        header: "LionIX LLP | Full Stack Developer – Python |",
+        dates: "Apr-2026 - Present",
+        bullets: "Working on intermediate-level Python tasks focused on backend logic and code optimization.\nDeveloping and debugging Python scripts to improve real-world development skills.\nApplying data handling, function design, and OOP concepts through practical tasks."
+      },
+      {
+        header: "Cognifyz Technologies | Frontend Developer Intern |",
+        dates: "Jan-2026 - Feb-2026",
+        bullets: "Developed responsive UI components using HTML5, CSS3, Bootstrap 5, and JavaScript.\nImplemented client-side validation and enhanced user experience across multiple web interfaces.\nCollaborated with the backend team to integrate REST APIs into frontend modules."
+      }
+    ];
+
+    // 6. Projects Array
+    projectList = [
+      {
+        header: "PASSPORT APPLICATION MANAGEMENT SYSTEM || Django, MySQL, Bootstrap5, JavaScript",
+        link: "[GitHub]",
+        bullets: "Developed full-stack passport tracking system using Django and MySQL, automating complete application workflows with real-time status updates and reducing manual processing by 70%\nBuilt secure RESTful APIs implementing CRUD operations, multi-stage verification processes across 5 checkpoints and role-based access control for 4 distinct user roles (Citizen, Police, RPO, Admin)\nDesigned responsive multi-step application form with client-side validation, secure document upload supporting multiple file types, encrypted password storage, CSRF protection, and session management"
+      },
+      {
+        header: "ICoder – Personal & Tutorial Blogging Platform || Django, MySQL, Bootstrap5, JavaScript",
+        link: "[GitHub]",
+        bullets: "Developed a dynamic blogging platform using Django and MySQL for publishing personal and technical tutorial articles with category-wise organization.\nImplemented secure authentication system enabling admin to create, edit, delete (CRUD) blog posts with image upload functionality.\nIntegrated comment system and search functionality to enhance user engagement and content discoverability."
+      }
+    ];
+
+    // 7. Certifications
+    document.getElementById('inp-certs').value = "Certification of Completion – Web Development Fundamentals (2025)\nCertification of Completion – Internship at Cognifyz Technologies (2026)\nCertification of Completion – Internship at Codveda Technologies (2026)";
+
+    renderEditorLists();
+    updatePreview();
+  }
+
+  /* Render Interactive Editor Forms */
+  function renderEditorLists() {
+    // Education Editor
+    const eduContainer = document.getElementById('education-entries-editor');
+    eduContainer.innerHTML = '';
+    educationList.forEach((edu, idx) => {
+      const box = document.createElement('div');
+      box.className = 'entry-box';
+      box.innerHTML = `
+        <button type="button" class="entry-box-delete" onclick="removeEducation(${idx})" title="Delete entry"><i class="bi bi-trash3"></i></button>
+        <div class="row g-2 mb-1">
+          <div class="col-8">
+            <input type="text" class="form-control form-control-custom" value="${edu.school || ''}" oninput="educationList[${idx}].school = this.value; updatePreview();" placeholder="School / University">
+          </div>
+          <div class="col-4">
+            <input type="text" class="form-control form-control-custom" value="${edu.dates || ''}" oninput="educationList[${idx}].dates = this.value; updatePreview();" placeholder="Dates">
+          </div>
+        </div>
+        <input type="text" class="form-control form-control-custom" value="${edu.degree || ''}" oninput="educationList[${idx}].degree = this.value; updatePreview();" placeholder="Degree / Major">
+      `;
+      eduContainer.appendChild(box);
+    });
+
+    // Experience Editor
+    const expContainer = document.getElementById('experience-entries-editor');
+    expContainer.innerHTML = '';
+    experienceList.forEach((exp, idx) => {
+      const box = document.createElement('div');
+      box.className = 'entry-box';
+      box.innerHTML = `
+        <button type="button" class="entry-box-delete" onclick="removeExperience(${idx})" title="Delete entry"><i class="bi bi-trash3"></i></button>
+        <div class="row g-2 mb-1">
+          <div class="col-8">
+            <input type="text" class="form-control form-control-custom" value="${exp.header || ''}" oninput="experienceList[${idx}].header = this.value; updatePreview();" placeholder="Company | Role">
+          </div>
+          <div class="col-4">
+            <input type="text" class="form-control form-control-custom" value="${exp.dates || ''}" oninput="experienceList[${idx}].dates = this.value; updatePreview();" placeholder="Dates">
+          </div>
+        </div>
+        <textarea class="form-control form-control-custom" rows="3" oninput="experienceList[${idx}].bullets = this.value; updatePreview();" placeholder="Bullets (one per line)...">${exp.bullets || ''}</textarea>
+      `;
+      expContainer.appendChild(box);
+    });
+
+    // Projects Editor
+    const projContainer = document.getElementById('projects-entries-editor');
+    projContainer.innerHTML = '';
+    projectList.forEach((proj, idx) => {
+      const box = document.createElement('div');
+      box.className = 'entry-box';
+      box.innerHTML = `
+        <button type="button" class="entry-box-delete" onclick="removeProject(${idx})" title="Delete entry"><i class="bi bi-trash3"></i></button>
+        <div class="row g-2 mb-1">
+          <div class="col-8">
+            <input type="text" class="form-control form-control-custom" value="${proj.header || ''}" oninput="projectList[${idx}].header = this.value; updatePreview();" placeholder="Project Title || Tech Stack">
+          </div>
+          <div class="col-4">
+            <input type="text" class="form-control form-control-custom" value="${proj.link || ''}" oninput="projectList[${idx}].link = this.value; updatePreview();" placeholder="[GitHub]">
+          </div>
+        </div>
+        <textarea class="form-control form-control-custom" rows="3" oninput="projectList[${idx}].bullets = this.value; updatePreview();" placeholder="Bullets (one per line)...">${proj.bullets || ''}</textarea>
+      `;
+      projContainer.appendChild(box);
+    });
+  }
+
+  function addEducationEntry() {
+    educationList.push({ school: "", dates: "", degree: "" });
+    renderEditorLists();
+    updatePreview();
+  }
+
+  function removeEducation(idx) {
+    educationList.splice(idx, 1);
+    renderEditorLists();
+    updatePreview();
+  }
+
+  function addExperienceEntry() {
+    experienceList.push({ header: "", dates: "", bullets: "" });
+    renderEditorLists();
+    updatePreview();
+  }
+
+  function removeExperience(idx) {
+    experienceList.splice(idx, 1);
+    renderEditorLists();
+    updatePreview();
+  }
+
+  function addProjectEntry() {
+    projectList.push({ header: "", link: "[GitHub]", bullets: "" });
+    renderEditorLists();
+    updatePreview();
+  }
+
+  function removeProject(idx) {
+    projectList.splice(idx, 1);
+    renderEditorLists();
+    updatePreview();
+  }
+
+  function aiEnhanceSummary() {
+    const summary = document.getElementById('inp-summary');
+    summary.value = "Results-driven Software Engineer with extensive experience designing high-throughput backend services and web applications using Python, Django, and modern cloud databases. Passionate about algorithms, robust RESTful APIs, and scalable software architecture.";
+    updatePreview();
+  }
+
+  function updatePreview() {
+    // 1. Name & Contact Bar
+    document.getElementById('prev-name').textContent = document.getElementById('inp-name').value || 'CANDIDATE NAME';
+    document.getElementById('prev-phone').textContent = document.getElementById('inp-phone').value || '';
+    document.getElementById('prev-email').textContent = document.getElementById('inp-email').value || '';
+    document.getElementById('prev-linkedin').textContent = document.getElementById('inp-linkedin').value || '| LinkedIn |';
+    document.getElementById('prev-github').textContent = document.getElementById('inp-github').value || '| GitHub |';
+    document.getElementById('prev-portfolio').textContent = document.getElementById('inp-portfolio').value || '| Portfolio |';
+
+    // 2. Summary
+    document.getElementById('prev-summary').textContent = document.getElementById('inp-summary').value || '';
+
+    // 3. Technical Skills
+    document.getElementById('prev-skills-lang').textContent = document.getElementById('inp-skills-lang').value || '';
+    document.getElementById('prev-skills-tools').textContent = document.getElementById('inp-skills-tools').value || '';
+    document.getElementById('prev-skills-pro').textContent = document.getElementById('inp-skills-pro').value || '';
+
+    // 4. Education List Render
+    const eduContainer = document.getElementById('prev-education-container');
+    eduContainer.innerHTML = '';
+    educationList.forEach(edu => {
+      if (edu.school || edu.degree) {
+        const div = document.createElement('div');
+        div.className = 'resume-entry';
+        div.innerHTML = `
+          <div class="resume-entry-header">
+            <span class="resume-entry-title">${edu.school || ''}</span>
+            <span class="resume-entry-dates">${edu.dates || ''}</span>
+          </div>
+          <div class="resume-entry-sub">${edu.degree || ''}</div>
+        `;
+        eduContainer.appendChild(div);
+      }
+    });
+
+    // 5. Experience List Render
+    const expContainer = document.getElementById('prev-experience-container');
+    expContainer.innerHTML = '';
+    experienceList.forEach(exp => {
+      if (exp.header) {
+        const div = document.createElement('div');
+        div.className = 'resume-entry';
+        const rawBullets = (exp.bullets || '').split('\n').filter(b => b.trim());
+        const bulletsHtml = rawBullets.map(b => `<li class="resume-bullet-point">${b.trim()}</li>`).join('');
+        div.innerHTML = `
+          <div class="resume-entry-header">
+            <span class="resume-entry-title">${exp.header}</span>
+            <span class="resume-entry-dates">${exp.dates || ''}</span>
+          </div>
+          <ul class="resume-bullets-list">${bulletsHtml}</ul>
+        `;
+        expContainer.appendChild(div);
+      }
+    });
+
+    // 6. Projects List Render
+    const projContainer = document.getElementById('prev-projects-container');
+    projContainer.innerHTML = '';
+    projectList.forEach(proj => {
+      if (proj.header) {
+        const div = document.createElement('div');
+        div.className = 'resume-entry';
+        const rawBullets = (proj.bullets || '').split('\n').filter(b => b.trim());
+        const bulletsHtml = rawBullets.map(b => `<li class="resume-bullet-point">${b.trim()}</li>`).join('');
+        div.innerHTML = `
+          <div class="resume-entry-header">
+            <span class="resume-entry-title">${proj.header}</span>
+            <span class="resume-entry-dates">${proj.link || ''}</span>
+          </div>
+          <ul class="resume-bullets-list">${bulletsHtml}</ul>
+        `;
+        projContainer.appendChild(div);
+      }
+    });
+
+    // 7. Certifications List Render
+    const certsContainer = document.getElementById('prev-certs-list');
+    certsContainer.innerHTML = '';
+    const rawCerts = (document.getElementById('inp-certs')?.value || '').split('\n').filter(c => c.trim());
+    rawCerts.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'resume-bullet-point';
+      li.textContent = c.trim();
+      certsContainer.appendChild(li);
+    });
+  }
+
+  function changeTemplateStyle(tpl) {
+    const doc = document.getElementById('resume-document-preview');
+    if (tpl === 'template-tech-sans') {
+      doc.className = 'template-tech-sans';
+    } else {
+      doc.className = 'template-latex-serif';
+    }
+  }
+
+  function openAutoTailorModal() {
+    if (tailorModalInstance) tailorModalInstance.show();
+  }
+
+  async function executeAutoTailor() {
+    const jdText = document.getElementById('modal-jd-text').value.trim();
+    const btn = document.getElementById('btn-execute-tailor');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    if (!jdText) {
+      alert('Please paste a job description.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5"></span> AI Auto-Tailoring...';
+
+    try {
+      const res = await fetch('/api/v1/resumes/auto-tailor/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ job_description: jdText })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        if (data.summary) document.getElementById('inp-summary').value = data.summary;
+        if (data.skills) {
+          const skillsStr = Array.isArray(data.skills) ? data.skills.join(', ') : data.skills;
+          document.getElementById('inp-skills-tools').value = skillsStr;
+        }
+        
+        if (data.experience && data.experience[0]) {
+          experienceList[0] = {
+            header: `${data.experience[0].company || 'LionIX LLP'} | ${data.experience[0].role || 'Full Stack Developer – Python'} |`,
+            dates: data.experience[0].dates || 'Apr-2026 - Present',
+            bullets: (data.experience[0].bullets || []).join('\n')
+          };
+        }
+
+        if (data.projects && data.projects[0]) {
+          projectList[0] = {
+            header: `${data.projects[0].title || 'PASSPORT TRACKING SYSTEM'} || ${data.projects[0].tech_stack || 'Django, MySQL, Bootstrap5, JavaScript'}`,
+            link: "[GitHub]",
+            bullets: (data.projects[0].bullets || []).join('\n')
+          };
+        }
+
+        renderEditorLists();
+        updatePreview();
+        tailorModalInstance.hide();
+        alert('🎉 Resume successfully auto-tailored with targeted JD keywords!');
+      } else {
+        alert(data.detail || 'Could not tailor resume.');
+      }
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-magic me-1"></i> Auto-Tailor Resume';
+    }
+  }
+
+  function downloadResumePDF() {
+    const element = document.getElementById('resume-document-preview');
+    const candName = (document.getElementById('inp-name').value || 'Jayhind_Yadav').replace(/\s+/g, '_');
+    const opt = {
+      margin:       [8, 10, 8, 10],
+      filename:     `ATS_Resume_${candName}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2.5, useCORS: true, letterRendering: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    const btn = document.getElementById('btn-download-pdf');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5"></span> Rendering PDF...';
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check2 text-success me-1.5"></i> Downloaded!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="bi bi-download me-1.5"></i> Download ATS PDF';
+      }, 2500);
+    }).catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-download me-1.5"></i> Download ATS PDF';
+      window.print();
+    });
+  }
+</script>
+{% endblock %}

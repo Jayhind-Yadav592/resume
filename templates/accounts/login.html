@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+  <div class="row g-4 align-items-center justify-content-center mx-auto" style="max-width: 1050px;">
+    <!-- Left Showcase Column: Social Proof & ATS Preview -->
+    <div class="col-lg-6 d-none d-lg-block">
+      <div class="card-custom p-4 p-xl-5 shadow-lg border-0 h-100 d-flex flex-column justify-content-between" style="background: rgba(255, 255, 255, 0.65);">
+        <div>
+          <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill glass-badge small fw-bold mb-3 shadow-xs">
+            <span class="badge bg-primary rounded-pill px-2 py-0.5" style="font-size: 0.72rem;">✨ AI Career Suite</span>
+            <span style="font-size: 0.8125rem;">15,000+ Resumes Analyzed</span>
+          </div>
+
+          <h2 class="display-6 fw-extrabold text-dark mb-3 tracking-tight" style="line-height: 1.2;">
+            Fast-Track Your Job Offers with <span class="gradient-text">ResumeForge AI</span>
+          </h2>
+
+          <p class="text-secondary small mb-4" style="line-height: 1.65;">
+            Sign in to access your saved resume scans, missing keyword breakdowns, and turn-based live mock interview sessions.
+          </p>
+
+          <!-- Feature Highlights List -->
+          <div class="space-y-3 mb-4">
+            <div class="d-flex align-items-start gap-3 mb-2.5">
+              <div class="rounded-3 d-flex align-items-center justify-content-center text-primary bg-primary-subtle p-2" style="width: 36px; height: 36px;">
+                <i class="bi bi-graph-up-arrow fs-6"></i>
+              </div>
+              <div>
+                <div class="fw-bold text-dark small">Instant Semantic ATS Scoring</div>
+                <div class="text-secondary small" style="font-size: 0.78rem;">Pinpoint missing keywords and structural formatting gaps.</div>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-start gap-3 mb-2.5">
+              <div class="rounded-3 d-flex align-items-center justify-content-center text-success bg-success-subtle p-2" style="width: 36px; height: 36px;">
+                <i class="bi bi-camera-video fs-6"></i>
+              </div>
+              <div>
+                <div class="fw-bold text-dark small">Google Meet Style Live Mock Interviews</div>
+                <div class="text-secondary small" style="font-size: 0.78rem;">Practice voice Q&A with real-time AI critique and subtitles.</div>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-start gap-3 mb-0">
+              <div class="rounded-3 d-flex align-items-center justify-content-center p-2" style="width: 36px; height: 36px; background-color: #F3E8FF; color: #7C3AED;">
+                <i class="bi bi-shield-check fs-6"></i>
+              </div>
+              <div>
+                <div class="fw-bold text-dark small">100% Privacy & Data Security</div>
+                <div class="text-secondary small" style="font-size: 0.78rem;">Your uploaded documents are securely processed and protected.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Candidate Testimonial Card -->
+        <div class="p-3 rounded-3 mt-4" style="background: rgba(241, 245, 249, 0.7); border: 1px solid rgba(226, 232, 240, 0.8);">
+          <div class="d-flex align-items-center gap-2 mb-1.5">
+            <div class="text-warning small">
+              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+            </div>
+            <span class="small fw-bold text-dark" style="font-size: 0.78rem;">5.0 Rating</span>
+          </div>
+          <p class="text-secondary small fst-italic mb-2" style="font-size: 0.8125rem; line-height: 1.5;">
+            "ResumeForge boosted my ATS match from 48% to 91%. The live voice interview gave me immense confidence before my final rounds!"
+          </p>
+          <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold small" style="width: 24px; height: 24px; font-size: 0.7rem;">
+              R
+            </div>
+            <span class="small fw-semibold text-dark" style="font-size: 0.78rem;">Rohit K. &middot; Fullstack Developer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Form Column: Sign In Card -->
+    <div class="col-lg-6 col-md-8">
+      <div class="card-custom p-4 p-md-5 shadow-lg border-0" style="background: rgba(255, 255, 255, 0.88);">
+        <!-- Form Header -->
+        <div class="text-center text-md-start mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-3 text-white mb-2 shadow-xs" style="width: 44px; height: 44px; background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);">
+            <i class="bi bi-person-lock fs-5"></i>
+          </div>
+          <h1 class="h4 fw-extrabold text-dark mb-1">Welcome Back</h1>
+          <p class="text-secondary small mb-0">Enter your credentials to access your ResumeForge workspace</p>
+        </div>
+
+        <!-- Inline Alert Message -->
+        <div id="login-alert" class="alert d-none mb-3 py-2 px-3 small rounded-3" role="alert"></div>
+
+        <!-- Form -->
+        <form id="login-form" onsubmit="handleLoginSubmit(event)">
+          <div class="mb-3">
+            <label for="username" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.75rem;">Username or Email</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0 text-secondary" style="border-color: rgba(226, 232, 240, 0.8);"><i class="bi bi-person"></i></span>
+              <input type="text" class="form-control border-start-0 ps-0 bg-white" id="username" placeholder="e.g. rohit_kumar" required autofocus style="border-color: rgba(226, 232, 240, 0.8);">
+            </div>
+            <div id="username-error" class="invalid-feedback d-none small text-danger mt-1"></div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="password" class="form-label small fw-bold text-secondary text-uppercase mb-0" style="font-size: 0.75rem;">Password</label>
+              <a href="#" onclick="alert('Password reset link will be sent to your registered email.'); return false;" class="text-primary small text-decoration-none" style="font-size: 0.75rem;">Forgot?</a>
+            </div>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0 text-secondary" style="border-color: rgba(226, 232, 240, 0.8);"><i class="bi bi-key"></i></span>
+              <input type="password" class="form-control border-start-0 border-end-0 ps-0 bg-white" id="password" placeholder="••••••••" required style="border-color: rgba(226, 232, 240, 0.8);">
+              <button type="button" class="input-group-text bg-white border-start-0 text-secondary" onclick="togglePasswordVisibility('password', this)" style="border-color: rgba(226, 232, 240, 0.8); cursor: pointer;" title="Show/Hide Password">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div id="password-error" class="invalid-feedback d-none small text-danger mt-1"></div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" id="remember-me" checked>
+              <label class="form-check-label small text-secondary" for="remember-me" style="font-size: 0.8125rem;">
+                Remember me
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" id="btn-login" class="btn btn-primary-custom w-100 py-2.5 mb-3 shadow">
+            <span>Sign In to Workspace</span> <i class="bi bi-arrow-right-short ms-1 fs-5"></i>
+          </button>
+        </form>
+
+        <div class="text-center pt-3 border-top small text-secondary" style="border-color: rgba(226, 232, 240, 0.6) !important;">
+          Don't have an account? <a href="/register/" class="text-primary fw-bold text-decoration-none">Create Free Account</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Redirect to dashboard if already logged in
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('resumeforge_access_token');
+    if (token) {
+      window.location.href = '/resumes/dashboard/';
+    }
+  });
+
+  function togglePasswordVisibility(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.className = 'bi bi-eye-slash';
+    } else {
+      input.type = 'password';
+      icon.className = 'bi bi-eye';
+    }
+  }
+
+  async function handleLoginSubmit(e) {
+    e.preventDefault();
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const alertBox = document.getElementById('login-alert');
+    const btn = document.getElementById('btn-login');
+
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+
+    alertBox.classList.add('d-none');
+    if (!username || !password) {
+      alertBox.className = 'alert alert-danger py-2 px-3 small rounded-3';
+      alertBox.textContent = 'Please enter your username/email and password.';
+      alertBox.classList.remove('d-none');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Authenticating...';
+
+    try {
+      const res = await fetch('/api/v1/auth/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('resumeforge_access_token', data.access);
+        localStorage.setItem('resumeforge_refresh_token', data.refresh);
+
+        alertBox.className = 'alert alert-success py-2 px-3 small rounded-3';
+        alertBox.innerHTML = `<i class="bi bi-check-circle me-1"></i> Welcome back, <strong>${data.user.username}</strong>! Redirecting...`;
+        alertBox.classList.remove('d-none');
+
+        setTimeout(() => {
+          window.location.href = '/resumes/dashboard/';
+        }, 600);
+      } else {
+        const errorMsg = data.detail || (data.non_field_errors ? data.non_field_errors.join(' ') : 'Invalid username or password.');
+        alertBox.className = 'alert alert-danger py-2 px-3 small rounded-3';
+        alertBox.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i> ${errorMsg}`;
+        alertBox.classList.remove('d-none');
+      }
+    } catch (err) {
+      alertBox.className = 'alert alert-danger py-2 px-3 small rounded-3';
+      alertBox.innerHTML = `<i class="bi bi-wifi-off me-1"></i> Network error: ${err.message}`;
+      alertBox.classList.remove('d-none');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>Sign In to Workspace</span> <i class="bi bi-arrow-right-short ms-1 fs-5"></i>';
+    }
+  }
+</script>
+{% endblock %}

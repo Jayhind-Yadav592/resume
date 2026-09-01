@@ -1,0 +1,11 @@
+/* Custom global styles for ResumeForge AI */
+:root {
+    --brand-primary: #6366f1;
+    --brand-dark: #0f172a;
+}
+
+body {
+    background-color: #020617;
+    color: #f8fafc;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Tech Salary & Compensation Estimator — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+  <!-- Header -->
+  <div class="text-center max-w-2xl mx-auto mb-5">
+    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill glass-badge small fw-bold mb-2 shadow-xs">
+      <span class="badge bg-success rounded-pill px-2 py-0.5" style="font-size: 0.72rem;">💰 Market Intelligence</span>
+      <span>Tech Compensation Estimator</span>
+    </div>
+    <h1 class="h3 fw-extrabold text-dark mb-2">Discover Your Market Worth</h1>
+    <p class="text-secondary small mb-0">Estimate your salary band based on tech stack, experience level, and discover high-paying companion skills that increase your offer by 20–35%.</p>
+  </div>
+
+  <!-- Interactive Estimator Grid -->
+  <div class="row g-4 justify-content-center max-w-4xl mx-auto">
+    <!-- Left Input Card -->
+    <div class="col-lg-5">
+      <div class="card-custom p-4 shadow-sm border-0 h-100">
+        <h2 class="fs-6 fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+          <i class="bi bi-sliders text-primary"></i> Your Experience & Stack
+        </h2>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-dark">Primary Tech Stack (Comma Separated)</label>
+          <input type="text" id="calc-skills" class="form-control form-control-sm" value="Python, Django, PostgreSQL, Docker, AWS, React">
+        </div>
+
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label small fw-bold text-dark mb-0">Years of Experience:</label>
+            <span class="badge bg-primary-subtle text-primary fw-bold" id="exp-val-display">3 Years</span>
+          </div>
+          <input type="range" class="form-range" id="calc-exp" min="0" max="12" step="1" value="3" oninput="document.getElementById('exp-val-display').textContent = this.value + ' Years';">
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label small fw-bold text-dark">Location Market</label>
+          <select id="calc-location" class="form-select form-select-sm">
+            <option value="India (Bangalore/Hyderabad/Remote)">India (Bangalore / Pune / Remote)</option>
+            <option value="US Remote / Global">US Remote ($ USD Tier)</option>
+            <option value="Europe / UK Remote">Europe / UK Remote</option>
+          </select>
+        </div>
+
+        <button type="button" onclick="calculateSalaryEstimate()" id="btn-calc-salary" class="btn btn-primary-custom w-100 py-2.5 shadow-sm">
+          <i class="bi bi-cash-stack me-1.5"></i> Calculate Salary Range
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Output Card -->
+    <div class="col-lg-7">
+      <div class="card-custom p-4 shadow-sm border-0 h-100 d-flex flex-column justify-content-between" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 245, 255, 0.85) 100%);">
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="badge bg-success text-white px-3 py-1 rounded-pill small fw-bold" id="est-demand">High Demand 🔥</span>
+            <span class="small text-muted" style="font-size: 0.75rem;">Q3 2026 Benchmarks</span>
+          </div>
+
+          <div class="text-secondary small fw-bold text-uppercase mb-1" style="font-size: 0.75rem;">Estimated Compensation Band</div>
+          <div class="display-6 fw-extrabold gradient-text mb-1" id="est-inr-range">₹12.5 LPA – ₹21.0 LPA</div>
+          <div class="small text-muted mb-4" id="est-usd-range">Approx. $55k – $95k USD / year</div>
+
+          <h3 class="fs-6 fw-bold text-dark mb-2">High-Paying Skill Uplifts:</h3>
+          <div class="space-y-2 mb-3" id="est-boost-container">
+            <div class="p-2.5 rounded-3 bg-white border d-flex justify-content-between align-items-center">
+              <div>
+                <strong class="text-dark small">System Design & Microservices</strong>
+                <div class="text-muted" style="font-size: 0.7rem;">Unlocks Senior/Lead compensation band</div>
+              </div>
+              <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small">+25% Boost</span>
+            </div>
+            <div class="p-2.5 rounded-3 bg-white border d-flex justify-content-between align-items-center">
+              <div>
+                <strong class="text-dark small">Kubernetes & Cloud (AWS/GCP)</strong>
+                <div class="text-muted" style="font-size: 0.7rem;">High-growth DevOps and Platform roles</div>
+              </div>
+              <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small">+20% Boost</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-top d-flex gap-2">
+          <a href="/resumes/builder/" class="btn btn-outline-custom btn-sm w-100 py-2">
+            <i class="bi bi-pencil-square me-1"></i> Update in Resume Builder
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  async function calculateSalaryEstimate() {
+    const skills = document.getElementById('calc-skills').value;
+    const exp = document.getElementById('calc-exp').value;
+    const loc = document.getElementById('calc-location').value;
+    const btn = document.getElementById('btn-calc-salary');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5"></span> Estimating...';
+
+    try {
+      const res = await fetch('/api/v1/resumes/salary-estimate/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills: skills, experience_years: exp, location: loc })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('est-inr-range').textContent = data.salary_inr_range;
+        document.getElementById('est-usd-range').textContent = `Approx. ${data.salary_usd_range} • Median: ${data.median_inr}`;
+        document.getElementById('est-demand').textContent = data.market_demand;
+
+        const boostContainer = document.getElementById('est-boost-container');
+        boostContainer.innerHTML = '';
+        (data.boost_skills || []).forEach(b => {
+          const div = document.createElement('div');
+          div.className = 'p-2.5 rounded-3 bg-white border d-flex justify-content-between align-items-center mb-2';
+          div.innerHTML = `
+            <div>
+              <strong class="text-dark small">${b.skill}</strong>
+              <div class="text-muted" style="font-size: 0.7rem;">${b.impact}</div>
+            </div>
+            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small">${b.uplift}</span>
+          `;
+          boostContainer.appendChild(div);
+        });
+      }
+    } catch (e) {
+      alert('Error calculating salary: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-cash-stack me-1.5"></i> Calculate Salary Range';
+    }
+  }
+</script>
+{% endblock %}

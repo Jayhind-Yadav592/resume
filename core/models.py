@@ -1,0 +1,11 @@
+"""Core app models (if any system-wide models are required)."""
+from django.db import models
+
+
+class TimeStampedModel(models.Model):
+    """Abstract base model with auto-populating created_at and updated_at fields."""
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True

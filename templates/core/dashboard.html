@@ -1,0 +1,716 @@
+{% extends 'base.html' %}
+
+{% block title %}User Dashboard — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Top Welcome & Status Banner -->
+    <div class="glass-card rounded-2xl p-6 mb-8 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-indigo-600/30">
+                <i class="fa-solid fa-user-astronaut"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-extrabold text-white flex items-center gap-2">
+                    Welcome, <span id="dash-username" class="gradient-text">Candidate</span>!
+                </h1>
+                <p id="dash-email" class="text-xs text-slate-400">Loading user profile...</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div id="dash-badge-container">
+                <span id="dash-pro-badge" class="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                    Free Tier
+                </span>
+            </div>
+            <button onclick="handleLogout()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-red-950/60 hover:text-red-300 text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            </button>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex border-b border-slate-800 mb-8 space-x-4">
+        <button id="tab-btn-scan" onclick="switchDashboardTab('scan')" class="pb-3 text-sm font-semibold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2">
+            <i class="fa-solid fa-file-shield"></i> ATS Resume Scanner
+        </button>
+        <button id="tab-btn-interview" onclick="switchDashboardTab('interview')" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-comments"></i> AI Mock Interview
+        </button>
+        <button id="tab-btn-billing" onclick="switchDashboardTab('billing')" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-crown"></i> Pro Subscription
+        </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SECTION 1: ATS RESUME SCANNER -->
+    <!-- ========================================================================= -->
+    <div id="section-scan" class="space-y-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Upload Form Card (5 cols) -->
+            <div class="lg:col-span-5 glass-card p-6 rounded-2xl border border-slate-800 shadow-xl space-y-5">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i> Scan New Resume
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Upload your PDF and match it against target job requirements.</p>
+                </div>
+
+                <!-- Alert within scan form -->
+                <div id="scan-alert" class="hidden p-3.5 rounded-xl text-xs border"></div>
+
+                <form id="resume-scan-form" onsubmit="handleResumeUpload(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Target Job Title</label>
+                        <input type="text" id="scan-job-title" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500" placeholder="e.g. Senior Backend Engineer">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Upload PDF Resume (Max 5MB)</label>
+                        <input type="file" id="scan-file" accept=".pdf,application/pdf" required class="w-full text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-900/90 p-2 rounded-xl border border-slate-800">
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Job Description (JD)</label>
+                            <button type="button" onclick="fillSampleJD()" class="text-[11px] text-indigo-400 hover:text-indigo-300 underline">Insert Sample JD</button>
+                        </div>
+                        <textarea id="scan-jd-text" rows="6" required minlength="20" class="w-full p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-indigo-500 font-mono leading-relaxed" placeholder="Paste full job description requirements here..."></textarea>
+                    </div>
+
+                    <button type="submit" id="btn-scan-submit" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-white text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Start ATS AI Analysis</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Analysis & Scorecard Results (7 cols) -->
+            <div class="lg:col-span-7 space-y-6">
+                <!-- Loading State -->
+                <div id="scan-loading-card" class="hidden glass-card p-12 rounded-2xl border border-slate-800 text-center space-y-4 shadow-xl">
+                    <div class="w-16 h-16 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin mx-auto"></div>
+                    <h3 class="text-lg font-bold text-white">Groq AI is Analyzing Your Resume...</h3>
+                    <p class="text-xs text-slate-400 max-w-sm mx-auto">Extracting PDF entities, measuring keyword match against the job description, and evaluating ATS layout compliance.</p>
+                    <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800 max-w-xs mx-auto mt-4">
+                        <div class="bg-indigo-500 h-2 rounded-full animate-pulse" style="width: 75%"></div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="scan-empty-card" class="glass-card p-12 rounded-2xl border border-slate-800 text-center space-y-3">
+                    <div class="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center text-slate-500 text-2xl mx-auto">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white">No Scan Selected</h3>
+                    <p class="text-xs text-slate-400 max-w-xs mx-auto">Upload a resume and job description on the left to generate your comprehensive ATS Scorecard.</p>
+                </div>
+
+                <!-- Detailed Result Card -->
+                <div id="scan-result-card" class="hidden glass-card p-6 rounded-2xl border border-slate-800 space-y-6 shadow-2xl">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <div>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Analysis Complete</span>
+                            <h3 id="result-job-title" class="text-xl font-bold text-white">Target Position</h3>
+                        </div>
+                        <div class="text-right">
+                            <div id="result-overall-score" class="text-4xl font-extrabold text-emerald-400">88%</div>
+                            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Overall Match</div>
+                        </div>
+                    </div>
+
+                    <!-- 3 Sub-scores Bar Breakdown -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-center">
+                            <div class="text-xs font-semibold text-slate-400 mb-1">Keywords</div>
+                            <div id="result-keyword-score" class="text-2xl font-bold text-indigo-400">90%</div>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-center">
+                            <div class="text-xs font-semibold text-slate-400 mb-1">Formatting</div>
+                            <div id="result-format-score" class="text-2xl font-bold text-purple-400">85%</div>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-center">
+                            <div class="text-xs font-semibold text-slate-400 mb-1">Experience</div>
+                            <div id="result-exp-score" class="text-2xl font-bold text-blue-400">89%</div>
+                        </div>
+                    </div>
+
+                    <!-- Missing Keywords -->
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Missing Keywords to Add
+                        </h4>
+                        <div id="result-missing-keywords" class="flex flex-wrap gap-2 pt-1">
+                            <!-- Badges injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Suggestions -->
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-lightbulb"></i> Actionable Improvements
+                        </h4>
+                        <ul id="result-suggestions" class="space-y-2 text-xs text-slate-300">
+                            <!-- Items injected dynamically -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SECTION 2: AI MOCK INTERVIEW -->
+    <!-- ========================================================================= -->
+    <div id="section-interview" class="hidden space-y-6">
+        <!-- Start Interview Card -->
+        <div id="interview-starter-card" class="max-w-2xl mx-auto glass-card p-8 rounded-2xl border border-slate-800 text-center space-y-5 shadow-2xl">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-3xl mx-auto shadow-lg shadow-purple-600/30">
+                <i class="fa-solid fa-microphone-lines"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-white">AI Technical Mock Interview</h2>
+                <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto">Engage in an interactive 6-turn mock interview. The AI asks questions, provides feedback on every response, and summarizes your strengths & weaknesses.</p>
+            </div>
+
+            <div class="text-left space-y-4 max-w-md mx-auto">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Target Interview Role</label>
+                    <input type="text" id="interview-role-input" value="Senior Backend Python Developer" class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-white text-sm focus:outline-none focus:border-indigo-500">
+                </div>
+                <button onclick="startInterviewSession()" id="btn-start-interview" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-semibold text-white text-sm shadow-xl shadow-indigo-600/25 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> Start 6-Turn Interview
+                </button>
+            </div>
+        </div>
+
+        <!-- Active Interview Arena -->
+        <div id="interview-arena-card" class="hidden max-w-4xl mx-auto glass-card rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[700px]">
+            <!-- Arena Header -->
+            <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-sm">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <h3 id="arena-job-role" class="text-sm font-bold text-white">Senior Backend Python Developer</h3>
+                        <span id="arena-status" class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Interview
+                        </span>
+                    </div>
+                </div>
+                <div id="arena-progress-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    Question 1 of 6
+                </div>
+            </div>
+
+            <!-- Chat Message Timeline -->
+            <div id="interview-chat-stream" class="flex-grow p-6 overflow-y-auto space-y-4 text-sm">
+                <!-- Messages injected here -->
+            </div>
+
+            <!-- Candidate Answer Input Form -->
+            <div id="interview-input-container" class="p-4 bg-slate-900/90 border-t border-slate-800">
+                <form id="interview-answer-form" onsubmit="handleAnswerSubmit(event)" class="flex gap-3">
+                    <textarea id="interview-answer-input" rows="2" required placeholder="Type your detailed answer here..." class="flex-grow p-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-indigo-500 leading-relaxed font-sans"></textarea>
+                    <button type="submit" id="btn-submit-answer" class="px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-white text-xs shadow-lg shadow-indigo-600/30 transition-all self-end flex items-center gap-1.5">
+                        <span>Send Answer</span>
+                        <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SECTION 3: PRO BILLING & RAZORPAY -->
+    <!-- ========================================================================= -->
+    <div id="section-billing" class="hidden space-y-8 max-w-4xl mx-auto">
+        <div class="text-center max-w-xl mx-auto mb-8">
+            <h2 class="text-2xl font-bold text-white">Unlock Pro Superpowers</h2>
+            <p class="text-xs text-slate-400 mt-1">Upgrade seamlessly with Razorpay to get unlimited ATS analyses and full mock interviews.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Free Plan Status -->
+            <div class="glass-card p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-white">Free Starter</h3>
+                    <div class="text-3xl font-extrabold text-white my-3">₹0 <span class="text-xs text-slate-400 font-normal">/ mo</span></div>
+                    <ul class="space-y-2.5 text-xs text-slate-300 mb-6">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> 3 ATS Scans / Month</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Keyword Match Analytics</li>
+                        <li class="flex items-center gap-2 text-slate-500"><i class="fa-solid fa-xmark"></i> Unlimited ATS Scans</li>
+                    </ul>
+                </div>
+                <div class="text-xs font-semibold text-slate-400 text-center py-2 bg-slate-900/60 rounded-xl border border-slate-800">
+                    Current Base Plan
+                </div>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="glass-card p-6 rounded-2xl border-2 border-indigo-500 relative flex flex-col justify-between shadow-2xl shadow-indigo-500/10">
+                <div class="absolute -top-3 right-5 px-3 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white uppercase tracking-wider">
+                    Recommended
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white">Pro Monthly</h3>
+                    <div class="text-3xl font-extrabold text-white my-3">₹499 <span class="text-xs text-slate-400 font-normal">/ 30 days</span></div>
+                    <ul class="space-y-2.5 text-xs text-slate-300 mb-6">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-indigo-400"></i> <strong>Unlimited</strong> ATS Scans</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-indigo-400"></i> 6-Turn AI Mock Interviews</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-indigo-400"></i> Weekly Pro Career Digest</li>
+                    </ul>
+                </div>
+                <button onclick="handleRazorpayUpgrade()" id="btn-upgrade-pro" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-white text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Upgrade to Pro Now</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentAuthUser = null;
+    let activeInterviewSessionId = null;
+    let activeInterviewQuestionOrder = 1;
+
+    // Check authentication on load
+    window.addEventListener('DOMContentLoaded', async () => {
+        const token = localStorage.getItem('resumeforge_access_token');
+        if (!token) {
+            window.location.href = '/login/';
+            return;
+        }
+        await loadUserProfile();
+    });
+
+    async function loadUserProfile() {
+        const token = localStorage.getItem('resumeforge_access_token');
+        try {
+            const res = await fetch('/api/v1/auth/me/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                currentAuthUser = await res.json();
+                document.getElementById('dash-username').textContent = currentAuthUser.first_name || currentAuthUser.username;
+                document.getElementById('dash-email').textContent = `${currentAuthUser.email} (ID #${currentAuthUser.id})`;
+
+                const badge = document.getElementById('dash-pro-badge');
+                if (currentAuthUser.has_active_pro) {
+                    badge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 flex items-center gap-1.5';
+                    badge.innerHTML = '<i class="fa-solid fa-crown text-[10px]"></i> PRO SUBSCRIBER';
+                } else {
+                    badge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700';
+                    badge.textContent = 'Free Tier (3 Scans/Mo)';
+                }
+            } else {
+                localStorage.removeItem('resumeforge_access_token');
+                window.location.href = '/login/';
+            }
+        } catch (e) {
+            console.error('Failed to load profile:', e);
+        }
+    }
+
+    function switchDashboardTab(tab) {
+        const tabs = ['scan', 'interview', 'billing'];
+        tabs.forEach(t => {
+            document.getElementById(`section-${t}`).classList.add('hidden');
+            const btn = document.getElementById(`tab-btn-${t}`);
+            btn.className = 'pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2';
+        });
+
+        document.getElementById(`section-${tab}`).classList.remove('hidden');
+        const activeBtn = document.getElementById(`tab-btn-${tab}`);
+        activeBtn.className = 'pb-3 text-sm font-semibold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2';
+    }
+
+    function fillSampleJD() {
+        document.getElementById('scan-job-title').value = 'Senior Python / Django Backend Engineer';
+        document.getElementById('scan-jd-text').value =
+`We are seeking an experienced Senior Python Engineer to build scalable microservices.
+Key Qualifications:
+- 4+ years of professional experience with Python and Django / FastAPI.
+- Solid understanding of PostgreSQL database optimization and schema design.
+- Hands-on experience with Celery task queues, Redis, and asynchronous architecture.
+- Familiarity with Docker, Kubernetes, AWS (ECS, S3, RDS), and CI/CD pipelines.
+- Strong knowledge of RESTful API design, OAuth2 / JWT authentication, and automated unit testing.`;
+    }
+
+    // =========================================================================
+    // RESUME ATS SCAN LOGIC
+    // =========================================================================
+    async function handleResumeUpload(e) {
+        e.preventDefault();
+        const token = localStorage.getItem('resumeforge_access_token');
+        const title = document.getElementById('scan-job-title').value.trim();
+        const jd = document.getElementById('scan-jd-text').value.trim();
+        const fileInput = document.getElementById('scan-file');
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+            showScanAlert('Please select a PDF resume file.', true);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('job_description', jd);
+        formData.append('title', title);
+
+        const btn = document.getElementById('btn-scan-submit');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+        document.getElementById('scan-empty-card').classList.add('hidden');
+        document.getElementById('scan-result-card').classList.add('hidden');
+        document.getElementById('scan-loading-card').classList.remove('hidden');
+
+        try {
+            const res = await fetch('/api/v1/resumes/upload/', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+                body: formData
+            });
+            const data = await res.json();
+
+            if (res.status === 202) {
+                const scanId = data.scan.id;
+                pollScanStatus(scanId);
+            } else if (res.status === 402) {
+                document.getElementById('scan-loading-card').classList.add('hidden');
+                document.getElementById('scan-empty-card').classList.remove('hidden');
+                showScanAlert(`⚠️ ${data.detail || 'Free limit reached. Please upgrade to Pro.'}`, true);
+            } else {
+                document.getElementById('scan-loading-card').classList.add('hidden');
+                document.getElementById('scan-empty-card').classList.remove('hidden');
+                showScanAlert(JSON.stringify(data), true);
+            }
+        } catch (err) {
+            document.getElementById('scan-loading-card').classList.add('hidden');
+            document.getElementById('scan-empty-card').classList.remove('hidden');
+            showScanAlert('Upload failed: ' + err.message, true);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Start ATS AI Analysis</span>';
+        }
+    }
+
+    async function pollScanStatus(scanId) {
+        const token = localStorage.getItem('resumeforge_access_token');
+        let attempts = 0;
+        const maxAttempts = 30;
+
+        const interval = setInterval(async () => {
+            attempts++;
+            try {
+                const res = await fetch(`/api/v1/resumes/scan/${scanId}/status/`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                if (data.status === 'completed') {
+                    clearInterval(interval);
+                    fetchFullScanResult(scanId);
+                } else if (data.status === 'failed' || attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    document.getElementById('scan-loading-card').classList.add('hidden');
+                    document.getElementById('scan-empty-card').classList.remove('hidden');
+                    showScanAlert(`Scan analysis failed: ${data.error_message || 'Timeout'}`, true);
+                }
+            } catch (e) {
+                console.error('Polling error:', e);
+            }
+        }, 1500);
+    }
+
+    async function fetchFullScanResult(scanId) {
+        const token = localStorage.getItem('resumeforge_access_token');
+        try {
+            const res = await fetch(`/api/v1/resumes/scan/${scanId}/`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+
+            document.getElementById('scan-loading-card').classList.add('hidden');
+            document.getElementById('scan-result-card').classList.remove('hidden');
+
+            document.getElementById('result-job-title').textContent = data.job_title || 'Target Position';
+            document.getElementById('result-overall-score').textContent = `${data.overall_score || 0}%`;
+            document.getElementById('result-keyword-score').textContent = `${data.keyword_score || 0}%`;
+            document.getElementById('result-format-score').textContent = `${data.formatting_score || 0}%`;
+            document.getElementById('result-exp-score').textContent = `${data.experience_score || 0}%`;
+
+            // Missing keywords badges
+            const kwContainer = document.getElementById('result-missing-keywords');
+            kwContainer.innerHTML = '';
+            (data.missing_keywords || []).forEach(kw => {
+                const badge = document.createElement('span');
+                badge.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-950/70 text-amber-300 border border-amber-800/60';
+                badge.textContent = `+ ${kw}`;
+                kwContainer.appendChild(badge);
+            });
+
+            // Suggestions list
+            const sugContainer = document.getElementById('result-suggestions');
+            sugContainer.innerHTML = '';
+            (data.suggestions || []).forEach(sug => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-2';
+                li.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mt-1 text-xs"></i> <span>${sug}</span>`;
+                sugContainer.appendChild(li);
+            });
+        } catch (e) {
+            console.error('Failed to fetch full scan:', e);
+        }
+    }
+
+    function showScanAlert(msg, isError = false) {
+        const box = document.getElementById('scan-alert');
+        box.classList.remove('hidden', 'bg-red-950/50', 'border-red-800', 'text-red-300', 'bg-emerald-950/50', 'border-emerald-800', 'text-emerald-300');
+        if (isError) {
+            box.classList.add('bg-red-950/50', 'border-red-800', 'text-red-300');
+        } else {
+            box.classList.add('bg-emerald-950/50', 'border-emerald-800', 'text-emerald-300');
+        }
+        box.innerHTML = msg;
+    }
+
+    // =========================================================================
+    // MOCK INTERVIEW LOGIC
+    // =========================================================================
+    async function startInterviewSession() {
+        const token = localStorage.getItem('resumeforge_access_token');
+        const role = document.getElementById('interview-role-input').value.trim();
+        const btn = document.getElementById('btn-start-interview');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Initializing Groq Interviewer...';
+
+        try {
+            const res = await fetch('/api/v1/interviews/start/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ job_role: role })
+            });
+            const session = await res.json();
+
+            if (res.ok) {
+                activeInterviewSessionId = session.id;
+                document.getElementById('interview-starter-card').classList.add('hidden');
+                document.getElementById('interview-arena-card').classList.remove('hidden');
+                document.getElementById('arena-job-role').textContent = session.job_role;
+
+                const chat = document.getElementById('interview-chat-stream');
+                chat.innerHTML = '';
+
+                // Render Question 1
+                if (session.questions && session.questions.length > 0) {
+                    const q1 = session.questions[0];
+                    activeInterviewQuestionOrder = 1;
+                    appendInterviewerMessage(q1.question_text, 1);
+                }
+            } else {
+                alert('Failed to start interview: ' + JSON.stringify(session));
+            }
+        } catch (e) {
+            alert('Interview start error: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-play"></i> Start 6-Turn Interview';
+        }
+    }
+
+    function appendInterviewerMessage(text, order) {
+        const chat = document.getElementById('interview-chat-stream');
+        const div = document.createElement('div');
+        div.className = 'flex items-start gap-3 max-w-2xl';
+        div.innerHTML = `
+            <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs shrink-0 font-bold">
+                AI
+            </div>
+            <div class="glass-card p-4 rounded-2xl border border-indigo-500/20 text-slate-100 shadow-md">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-indigo-400 mb-1">Question ${order} of 6</div>
+                <p class="leading-relaxed text-xs sm:text-sm">${text}</p>
+            </div>
+        `;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+        document.getElementById('arena-progress-badge').textContent = `Question ${order} of 6`;
+    }
+
+    function appendCandidateMessage(text) {
+        const chat = document.getElementById('interview-chat-stream');
+        const div = document.createElement('div');
+        div.className = 'flex items-start justify-end gap-3 max-w-2xl ml-auto';
+        div.innerHTML = `
+            <div class="p-4 rounded-2xl bg-indigo-600 text-white shadow-md max-w-lg">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-indigo-200 mb-1 text-right">Your Answer</div>
+                <p class="leading-relaxed text-xs sm:text-sm">${text}</p>
+            </div>
+            <div class="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center text-white text-xs shrink-0 font-bold">
+                You
+            </div>
+        `;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function appendFeedbackMessage(feedback) {
+        const chat = document.getElementById('interview-chat-stream');
+        const div = document.createElement('div');
+        div.className = 'p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-xs flex items-start gap-2.5 max-w-xl mx-auto my-2';
+        div.innerHTML = `
+            <i class="fa-solid fa-comment-dots text-indigo-400 mt-0.5"></i>
+            <div>
+                <strong class="text-indigo-400 text-[11px] uppercase tracking-wide">AI Feedback:</strong>
+                <p class="mt-0.5">${feedback}</p>
+            </div>
+        `;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function appendCompletionSummary(summary) {
+        const chat = document.getElementById('interview-chat-stream');
+        const div = document.createElement('div');
+        div.className = 'p-6 rounded-2xl glass-card border-2 border-emerald-500/40 text-slate-100 text-xs shadow-2xl space-y-3 my-4';
+        div.innerHTML = `
+            <div class="flex items-center gap-2 text-emerald-400 font-bold text-base">
+                <i class="fa-solid fa-trophy"></i>
+                <span>Interview Completed! Performance Assessment</span>
+            </div>
+            <pre class="whitespace-pre-wrap font-sans text-xs sm:text-sm text-slate-200 leading-relaxed bg-slate-950/80 p-4 rounded-xl border border-slate-800">${summary}</pre>
+        `;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+
+        document.getElementById('arena-progress-badge').className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+        document.getElementById('arena-progress-badge').textContent = 'Completed (6 of 6)';
+        document.getElementById('interview-input-container').innerHTML = `
+            <div class="text-center py-2">
+                <button onclick="location.reload()" class="px-6 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold">Start Another Interview</button>
+            </div>
+        `;
+    }
+
+    async function handleAnswerSubmit(e) {
+        e.preventDefault();
+        const token = localStorage.getItem('resumeforge_access_token');
+        const input = document.getElementById('interview-answer-input');
+        const answerText = input.value.trim();
+        if (!answerText || !activeInterviewSessionId) return;
+
+        const btn = document.getElementById('btn-submit-answer');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Evaluating...';
+
+        appendCandidateMessage(answerText);
+        input.value = '';
+
+        try {
+            const res = await fetch(`/api/v1/interviews/${activeInterviewSessionId}/answer/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ answer_text: answerText })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                if (data.feedback) {
+                    appendFeedbackMessage(data.feedback);
+                }
+
+                if (data.is_completed) {
+                    appendCompletionSummary(data.summary);
+                } else if (data.next_question) {
+                    activeInterviewQuestionOrder = data.next_question.order;
+                    appendInterviewerMessage(data.next_question.question_text, data.next_question.order);
+                }
+            } else {
+                alert('Error submitting answer: ' + JSON.stringify(data));
+            }
+        } catch (e) {
+            alert('Failed to submit answer: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span>Send Answer</span> <i class="fa-solid fa-paper-plane text-[10px]"></i>';
+        }
+    }
+
+    // =========================================================================
+    // PRO BILLING UPGRADE LOGIC
+    // =========================================================================
+    async function handleRazorpayUpgrade() {
+        const token = localStorage.getItem('resumeforge_access_token');
+        const btn = document.getElementById('btn-upgrade-pro');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Order...';
+
+        try {
+            // Fetch plan ID
+            const plansRes = await fetch('/api/v1/billing/plans/');
+            const plansData = await plansRes.json();
+            const plans = Array.isArray(plansData) ? plansData : (plansData.results || []);
+            const proPlan = plans.find(p => parseFloat(p.price) > 0) || plans[0];
+
+            const orderRes = await fetch('/api/v1/billing/create-order/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ plan_id: proPlan.id })
+            });
+            const orderData = await orderRes.json();
+
+            if (orderRes.ok) {
+                // Verify payment simulation
+                const verifyRes = await fetch('/api/v1/billing/verify-payment/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        razorpay_order_id: orderData.order_id,
+                        razorpay_payment_id: `pay_sim_${Date.now()}`,
+                        razorpay_signature: 'valid_simulated_sig'
+                    })
+                });
+                const verifyData = await verifyRes.json();
+
+                if (verifyRes.ok) {
+                    alert('🎉 Pro Subscription successfully activated for 30 days!');
+                    await loadUserProfile();
+                    switchDashboardTab('scan');
+                } else {
+                    alert('Payment verification failed: ' + JSON.stringify(verifyData));
+                }
+            }
+        } catch (e) {
+            alert('Billing error: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-bolt"></i> <span>Upgrade to Pro Now</span>';
+        }
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('resumeforge_access_token');
+        localStorage.removeItem('resumeforge_refresh_token');
+        window.location.href = '/login/';
+    }
+</script>
+{% endblock %}

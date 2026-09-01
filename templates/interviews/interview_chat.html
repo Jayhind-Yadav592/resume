@@ -1,0 +1,602 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Live AI Interview Call — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-3">
+  <!-- Google Meet Top Bar -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 px-2">
+    <!-- Meeting Title & Badges -->
+    <div class="d-flex align-items-center flex-wrap gap-2">
+      <a href="/resumes/dashboard/" class="btn btn-outline-custom btn-sm py-1 px-2.5 rounded-pill me-1" title="Leave & return to dashboard">
+        <i class="bi bi-arrow-left me-1"></i> Dashboard
+      </a>
+      <h1 class="h5 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+        <span id="meet-role-title">Technical Interview</span>
+      </h1>
+      <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 small shadow-xs">
+        <i class="bi bi-record-fill me-1 text-white"></i> <span id="call-timer">00:00</span>
+      </span>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small" id="session-badge">
+        <i class="bi bi-shield-check me-1"></i> AI Active
+      </span>
+    </div>
+
+    <!-- Question Step Indicator & Controls -->
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-md-end">
+        <div class="small fw-bold text-dark mb-0.5" id="question-progress-label">Question 1 of 6</div>
+        <div class="progress" style="height: 6px; width: 120px;">
+          <div id="question-progress-bar" class="progress-bar bg-primary" style="width: 16%;"></div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-outline-custom btn-sm rounded-pill px-3" onclick="toggleSideDrawer()" id="btn-toggle-drawer-top">
+        <i class="bi bi-chat-square-text-fill text-primary me-1"></i> In-Call Chat
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Video Stage + Collapsible In-Call Drawer -->
+  <div class="row g-3">
+    <!-- Main Video Grid (Google Meet Stage) -->
+    <div class="col-lg-8" id="stage-col">
+      <div class="meet-stage-grid mb-3">
+        <!-- Tile 1: AI Senior Interviewer -->
+        <div class="meet-tile" id="tile-ai">
+          <!-- Ambient Audio Visualizer Rings -->
+          <div class="ai-avatar-pulse-container">
+            <div class="ai-pulse-ring" id="ai-pulse-ring" style="display: none;"></div>
+            <div class="ai-avatar-circle">
+              <i class="bi bi-robot"></i>
+            </div>
+          </div>
+
+          <div class="text-center text-white z-2 mb-4">
+            <h2 class="h6 fw-bold text-white mb-1">AI Lead Technical Interviewer</h2>
+            <div class="small text-white-50" id="ai-speaking-status">
+              <span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...
+            </div>
+          </div>
+
+          <!-- Live Closed Captions / Subtitle Bar Overlay -->
+          <div class="meet-caption-overlay" id="meet-caption-box">
+            <span class="text-warning fw-bold small me-1">AI:</span>
+            <span id="meet-caption-text">Connecting to AI interviewer...</span>
+          </div>
+
+          <!-- Tile Name Tag -->
+          <div class="meet-tile-tag">
+            <i class="bi bi-robot text-primary"></i> AI Interviewer (Architect)
+          </div>
+        </div>
+
+        <!-- Tile 2: Candidate Live Webcam -->
+        <div class="meet-tile position-relative" id="tile-user">
+          <video id="room-user-webcam" autoplay playsinline muted></video>
+
+          <!-- Speech Intelligence Floating Badge -->
+          <div class="position-absolute top-0 start-0 m-2 p-2 rounded-3 text-white small shadow-sm" style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); z-index: 10; font-size: 0.72rem; border: 1px solid rgba(255,255,255,0.15);">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <i class="bi bi-speedometer2 text-info"></i>
+              <span>Pacing: <strong id="speech-wpm-val" class="text-white">130 WPM</strong></span>
+              <span class="badge bg-success-subtle text-success py-0 px-1.5" id="speech-pacing-badge">Good</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-chat-dots-fill text-warning"></i>
+              <span>Filler Words: <strong id="speech-filler-count" class="text-warning">0</strong></span>
+              <span class="text-white-50" style="font-size: 0.68rem;">("um", "like")</span>
+            </div>
+          </div>
+
+          <!-- Fallback when camera is disabled -->
+          <div id="room-cam-off-placeholder" class="d-none text-center text-white z-2 p-3">
+            <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-2" style="width: 80px; height: 80px;">
+              <i class="bi bi-person-fill fs-1"></i>
+            </div>
+            <div class="small fw-bold">Camera is Off</div>
+            <div class="text-white-50 small" style="font-size: 0.75rem;">Voice is active via microphone.</div>
+          </div>
+
+          <!-- Tile Name Tag -->
+          <div class="meet-tile-tag">
+            <i class="bi bi-person-fill text-success"></i> <span id="candidate-name-tag">You (Candidate)</span>
+            <i class="bi bi-mic-fill text-success ms-1" id="candidate-mic-icon"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Answer & Voice Transcription Dock -->
+      <div class="card-custom p-3 shadow-md mb-3" id="answer-dock">
+        <form id="answer-form" onsubmit="handleSendAnswer(event)">
+          <div class="d-flex justify-content-between align-items-center mb-1.5 px-1">
+            <label for="answer-input" class="small fw-bold text-secondary text-uppercase mb-0" style="font-size: 0.75rem;">
+              <i class="bi bi-chat-left-quote text-primary me-1"></i> Your Response
+            </label>
+            <div class="d-flex align-items-center gap-2">
+              <span id="voice-recording-status" class="small d-none" style="font-size: 0.75rem;"></span>
+              <span class="text-muted small" id="word-counter" style="font-size: 0.75rem;">0 words</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <textarea class="form-control border-light-subtle bg-white" id="answer-input" rows="2" placeholder="Speak into microphone or type your response here... (Ctrl+Enter to send)" required oninput="updateWordCount()"></textarea>
+            <!-- Mic Speak Button -->
+            <button type="button" id="btn-mic" class="btn btn-outline-custom px-3.5 shadow-none" title="Speak answer">
+              <i class="bi bi-mic text-secondary"></i>
+            </button>
+            <!-- Submit Button -->
+            <button type="submit" id="btn-send-answer" class="btn btn-primary-custom px-4 shadow-sm">
+              <span>Submit Answer</span> <i class="bi bi-arrow-right-short ms-1 fs-5"></i>
+            </button>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-1.5 px-1">
+            <span class="text-muted small" style="font-size: 0.75rem;">Press <kbd class="bg-light text-dark border">Ctrl</kbd> + <kbd class="bg-light text-dark border">Enter</kbd> to submit</span>
+            <span id="voice-support-notice" class="text-muted small d-none" style="font-size: 0.75rem;"></span>
+          </div>
+        </form>
+      </div>
+
+      <!-- Google Meet Bottom Toolbar Bar -->
+      <div class="meet-bottom-bar">
+        <div class="d-flex align-items-center gap-2">
+          <span class="small fw-bold text-dark d-none d-md-inline" id="meet-bottom-time">00:00</span>
+          <span class="badge bg-light text-secondary border rounded-pill small font-monospace d-none d-sm-inline">Google Meet Mode</span>
+        </div>
+
+        <!-- Center In-Call Controls -->
+        <div class="d-flex align-items-center gap-3">
+          <!-- Mic Toggle -->
+          <button type="button" id="btn-meet-mic" onclick="toggleRoomMic()" class="meet-control-btn shadow-sm" title="Toggle Microphone">
+            <i class="bi bi-mic-fill text-dark"></i>
+          </button>
+
+          <!-- Camera Toggle -->
+          <button type="button" id="btn-meet-cam" onclick="toggleRoomCam()" class="meet-control-btn shadow-sm" title="Toggle Camera">
+            <i class="bi bi-camera-video-fill text-dark"></i>
+          </button>
+
+          <!-- Subtitles / CC Toggle -->
+          <button type="button" id="btn-meet-cc" onclick="toggleCaptions()" class="meet-control-btn shadow-sm" title="Toggle Live Captions">
+            <i class="bi bi-badge-cc-fill text-primary"></i>
+          </button>
+
+          <!-- Side Drawer Toggle -->
+          <button type="button" id="btn-meet-chat" onclick="toggleSideDrawer()" class="meet-control-btn shadow-sm" title="Toggle Chat & Notes">
+            <i class="bi bi-chat-square-text text-dark"></i>
+          </button>
+
+          <!-- Red Hangup / End Interview Button -->
+          <button type="button" onclick="confirmEndCall()" class="meet-control-btn btn-hangup shadow" title="End Interview Call">
+            <i class="bi bi-telephone-x-fill text-white"></i>
+          </button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <!-- Voice Mode Auto-Speak Toggle -->
+          <div class="form-check form-switch mb-0 d-flex align-items-center gap-1.5" id="voice-mode-toggle-container">
+            <input class="form-check-input mt-0" type="checkbox" role="switch" id="voice-mode-toggle" checked style="cursor: pointer;">
+            <label class="form-check-label small fw-bold text-secondary user-select-none d-none d-md-inline" for="voice-mode-toggle" style="cursor: pointer; font-size: 0.75rem;">
+              Auto-Speak
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Collapsible In-Call Chat & Live AI Critique Drawer -->
+    <div class="col-lg-4" id="drawer-col">
+      <div class="meet-drawer p-3" style="min-height: 560px;">
+        <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom" style="border-color: rgba(226, 232, 240, 0.6) !important;">
+          <h2 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-1.5">
+            <i class="bi bi-journal-text text-primary"></i> In-Call Transcript & Feedback
+          </h2>
+          <button type="button" class="btn-close d-lg-none" onclick="toggleSideDrawer()"></button>
+        </div>
+
+        <!-- Chat / Transcript History Box -->
+        <div class="chat-messages p-2 rounded-3 mb-2" id="chat-messages-box" style="background: rgba(248, 250, 252, 0.6); max-height: 520px;">
+          <!-- Initial loading placeholder -->
+          <div class="text-center py-5" id="chat-initial-loader">
+            <div class="spinner-border text-primary spinner-border-sm mb-2" role="status"></div>
+            <div class="text-secondary small">Connecting to AI Interviewer...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Session Summary Assessment Modal / Screen -->
+  <div id="summary-card" class="card-custom p-4 p-md-5 d-none border-success shadow-lg mt-4" style="background: rgba(255, 255, 255, 0.95);">
+    <div class="text-center mb-4">
+      <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-success bg-success-subtle mb-3 shadow-xs" style="width: 72px; height: 72px;">
+        <i class="bi bi-award-fill fs-1"></i>
+      </div>
+      <h2 class="h3 fw-extrabold text-dark mb-1">Interview Completed!</h2>
+      <p class="text-secondary small mb-0">Here is your comprehensive performance assessment and final rating.</p>
+    </div>
+
+    <div class="p-4 rounded-3 border mb-4" style="background: rgba(248, 250, 252, 0.85); border-color: rgba(226, 232, 240, 0.8) !important;">
+      <h3 class="h6 fw-bold text-dark mb-3"><i class="bi bi-journal-check text-primary me-1"></i> Evaluator's Comprehensive Assessment:</h3>
+      <div class="text-dark small" style="line-height: 1.75; white-space: pre-line;" id="summary-text-content">
+        <!-- Populated via JS -->
+      </div>
+    </div>
+
+    <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+      <a href="/interviews/setup/" class="btn btn-primary-custom px-4 py-3 shadow">
+        <i class="bi bi-arrow-repeat me-1"></i> Practice Another Role
+      </a>
+      <a href="/resumes/dashboard/" class="btn btn-outline-custom px-4 py-3">
+        <i class="bi bi-speedometer2 me-1"></i> View Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Voice Mode Engine (Native Web Speech API) -->
+<script src="{% static 'js/interviews/voice.js' %}"></script>
+
+<script>
+  let currentSessionId = null;
+  let isSubmitting = false;
+  let roomStream = null;
+  let isRoomMicOn = true;
+  let isRoomCamOn = true;
+  let areCaptionsOn = true;
+  let callSeconds = 0;
+  let callTimerInterval = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    currentSessionId = urlParams.get('id');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    if (!token) {
+      window.location.href = '/login/';
+      return;
+    }
+
+    if (!currentSessionId) {
+      window.location.href = '/interviews/setup/';
+      return;
+    }
+
+    startCallTimer();
+    initRoomMedia();
+    setupKeyboardShortcuts();
+    await loadInterviewSession(currentSessionId, token);
+  });
+
+  // Call Duration Timer
+  function startCallTimer() {
+    callTimerInterval = setInterval(() => {
+      callSeconds++;
+      const mins = Math.floor(callSeconds / 60).toString().padStart(2, '0');
+      const secs = (callSeconds % 60).toString().padStart(2, '0');
+      const timeStr = `${mins}:${secs}`;
+      document.getElementById('call-timer').textContent = timeStr;
+      document.getElementById('meet-bottom-time').textContent = timeStr;
+    }, 1000);
+  }
+
+  // Initialize Room Webcam Feed
+  async function initRoomMedia() {
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        roomStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true
+        });
+        const videoEl = document.getElementById('room-user-webcam');
+        videoEl.srcObject = roomStream;
+      }
+    } catch (err) {
+      console.warn('Room media notice:', err);
+      // Fallback avatar if user denies or lacks camera
+      document.getElementById('room-user-webcam').classList.add('d-none');
+      document.getElementById('room-cam-off-placeholder').classList.remove('d-none');
+    }
+  }
+
+  function toggleRoomMic() {
+    isRoomMicOn = !isRoomMicOn;
+    if (roomStream) {
+      roomStream.getAudioTracks().forEach(t => t.enabled = isRoomMicOn);
+    }
+    const btn = document.getElementById('btn-meet-mic');
+    const icon = document.getElementById('candidate-mic-icon');
+
+    if (isRoomMicOn) {
+      btn.className = 'meet-control-btn shadow-sm';
+      btn.innerHTML = '<i class="bi bi-mic-fill text-dark"></i>';
+      icon.className = 'bi bi-mic-fill text-success ms-1';
+    } else {
+      btn.className = 'meet-control-btn active-off shadow-sm';
+      btn.innerHTML = '<i class="bi bi-mic-mute-fill"></i>';
+      icon.className = 'bi bi-mic-mute-fill text-danger ms-1';
+    }
+  }
+
+  function toggleRoomCam() {
+    isRoomCamOn = !isRoomCamOn;
+    if (roomStream) {
+      roomStream.getVideoTracks().forEach(t => t.enabled = isRoomCamOn);
+    }
+    const videoEl = document.getElementById('room-user-webcam');
+    const placeholder = document.getElementById('room-cam-off-placeholder');
+    const btn = document.getElementById('btn-meet-cam');
+
+    if (isRoomCamOn) {
+      videoEl.classList.remove('d-none');
+      placeholder.classList.add('d-none');
+      btn.className = 'meet-control-btn shadow-sm';
+      btn.innerHTML = '<i class="bi bi-camera-video-fill text-dark"></i>';
+    } else {
+      videoEl.classList.add('d-none');
+      placeholder.classList.remove('d-none');
+      btn.className = 'meet-control-btn active-off shadow-sm';
+      btn.innerHTML = '<i class="bi bi-camera-video-off-fill"></i>';
+    }
+  }
+
+  function toggleCaptions() {
+    areCaptionsOn = !areCaptionsOn;
+    const captionBox = document.getElementById('meet-caption-box');
+    const btn = document.getElementById('btn-meet-cc');
+
+    if (areCaptionsOn) {
+      captionBox.classList.remove('d-none');
+      btn.innerHTML = '<i class="bi bi-badge-cc-fill text-primary"></i>';
+    } else {
+      captionBox.classList.add('d-none');
+      btn.innerHTML = '<i class="bi bi-badge-cc text-secondary"></i>';
+    }
+  }
+
+  function toggleSideDrawer() {
+    const drawerCol = document.getElementById('drawer-col');
+    const stageCol = document.getElementById('stage-col');
+
+    if (drawerCol.classList.contains('d-none')) {
+      drawerCol.classList.remove('d-none');
+      stageCol.className = 'col-lg-8';
+    } else {
+      drawerCol.classList.add('d-none');
+      stageCol.className = 'col-lg-12';
+    }
+  }
+
+  function confirmEndCall() {
+    if (confirm('Are you sure you want to end this live mock interview call?')) {
+      if (roomStream) {
+        roomStream.getTracks().forEach(t => t.stop());
+      }
+      if (callTimerInterval) clearInterval(callTimerInterval);
+      if (window.VoiceInterview) window.VoiceInterview.stopSpeaking();
+      window.location.href = '/resumes/dashboard/';
+    }
+  }
+
+  function setupKeyboardShortcuts() {
+    const answerInput = document.getElementById('answer-input');
+    answerInput.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('answer-form').dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    });
+  }
+
+  function updateWordCount() {
+    const text = document.getElementById('answer-input').value.trim();
+    const count = text ? text.split(/\s+/).length : 0;
+    document.getElementById('word-counter').textContent = `${count} word${count === 1 ? '' : 's'}`;
+  }
+
+  async function loadInterviewSession(sessionId, token) {
+    const messagesBox = document.getElementById('chat-messages-box');
+    const loader = document.getElementById('chat-initial-loader');
+
+    try {
+      const res = await fetch(`/api/v1/interviews/${sessionId}/`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      if (res.ok) {
+        const session = await res.json();
+        if (loader) loader.remove();
+
+        const role = session.job_role || 'Technical Interview';
+        document.getElementById('meet-role-title').textContent = role;
+
+        messagesBox.innerHTML = '';
+        const questions = session.questions || [];
+
+        questions.forEach((q, idx) => {
+          const isCurrentActive = (idx === questions.length - 1 && !q.answer_text && session.status !== 'completed');
+          appendAiBubble(q.question_text, q.order, isCurrentActive);
+
+          if (q.answer_text) {
+            appendUserBubble(q.answer_text);
+          }
+
+          if (q.ai_feedback) {
+            appendFeedbackBubble(q.ai_feedback);
+          }
+        });
+
+        const activeOrder = questions.length;
+        updateProgress(activeOrder);
+
+        if (session.status === 'completed') {
+          showCompletionState(session.summary);
+        }
+
+        scrollToBottom();
+      } else {
+        throw new Error('Could not load session');
+      }
+    } catch (err) {
+      messagesBox.innerHTML = `<div class="text-danger small p-3 text-center"><i class="bi bi-exclamation-triangle me-1"></i> Error loading session: ${err.message}</div>`;
+    }
+  }
+
+  function appendAiBubble(text, order, autoSpeak = true) {
+    const box = document.getElementById('chat-messages-box');
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble-ai mb-2';
+
+    const safeEscaped = encodeURIComponent(text);
+
+    bubble.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.7rem;">
+          <i class="bi bi-robot me-1"></i> Question ${order} of 6
+        </span>
+        <button type="button" class="btn btn-outline-custom btn-sm p-0 rounded-circle d-flex align-items-center justify-content-center" style="width: 26px; height: 26px;" onclick="window.VoiceInterview && window.VoiceInterview.speak(decodeURIComponent('${safeEscaped}'), true, this)" title="Replay question audio">
+          <i class="bi bi-volume-up text-secondary" style="font-size: 0.8rem;"></i>
+        </button>
+      </div>
+      <div class="text-dark small" style="line-height: 1.6;">${text}</div>
+    `;
+    box.appendChild(bubble);
+
+    // Update Live Subtitles in AI Video Tile
+    document.getElementById('meet-caption-text').textContent = text;
+
+    // Trigger Pulse & Voice
+    if (autoSpeak) {
+      triggerAiPulseAnimation(true);
+      if (window.VoiceInterview) {
+        window.VoiceInterview.speak(text);
+      }
+      setTimeout(() => triggerAiPulseAnimation(false), 8000);
+    }
+  }
+
+  function triggerAiPulseAnimation(isSpeaking) {
+    const pulseRing = document.getElementById('ai-pulse-ring');
+    const speakingStatus = document.getElementById('ai-speaking-status');
+    if (isSpeaking) {
+      pulseRing.style.display = 'block';
+      speakingStatus.innerHTML = '<span class="badge bg-success rounded-pill px-2 py-0.5"><i class="bi bi-soundwave me-1"></i> AI Speaking...</span>';
+    } else {
+      pulseRing.style.display = 'none';
+      speakingStatus.innerHTML = '<span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...';
+    }
+  }
+
+  function appendUserBubble(text) {
+    const box = document.getElementById('chat-messages-box');
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble-user mb-2';
+    bubble.innerHTML = `
+      <div class="small" style="line-height: 1.6;">${text}</div>
+    `;
+    box.appendChild(bubble);
+  }
+
+  function appendFeedbackBubble(text) {
+    const box = document.getElementById('chat-messages-box');
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble-feedback mb-2';
+    bubble.innerHTML = `
+      <div class="fw-bold mb-1 d-flex align-items-center gap-1.5" style="font-size: 0.75rem;">
+        <i class="bi bi-chat-heart-fill text-warning"></i> AI Critique & Evaluation:
+      </div>
+      <div style="line-height: 1.55;">${text}</div>
+    `;
+    box.appendChild(bubble);
+  }
+
+  function updateProgress(order) {
+    const capped = Math.min(order, 6);
+    document.getElementById('question-progress-label').textContent = `Question ${capped} of 6`;
+    document.getElementById('question-progress-bar').style.width = `${Math.round((capped / 6) * 100)}%`;
+  }
+
+  function scrollToBottom() {
+    const box = document.getElementById('chat-messages-box');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function handleSendAnswer(e) {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    if (window.VoiceInterview) {
+      window.VoiceInterview.stopSpeaking();
+    }
+
+    const input = document.getElementById('answer-input');
+    const answerText = input.value.trim();
+    const btn = document.getElementById('btn-send-answer');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    if (!answerText) return;
+
+    appendUserBubble(answerText);
+    input.value = '';
+    updateWordCount();
+    scrollToBottom();
+
+    isSubmitting = true;
+    btn.disabled = true;
+    input.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...';
+
+    try {
+      const res = await fetch(`/api/v1/interviews/${currentSessionId}/answer/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ answer_text: answerText })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        if (data.feedback) {
+          appendFeedbackBubble(data.feedback);
+        }
+
+        if (data.is_completed || !data.next_question) {
+          updateProgress(6);
+          showCompletionState(data.summary);
+        } else {
+          appendAiBubble(data.next_question.question_text, data.next_question.order, true);
+          updateProgress(data.next_question.order);
+        }
+
+        scrollToBottom();
+      } else {
+        alert(data.detail || 'Could not submit answer. Please retry.');
+      }
+    } catch (err) {
+      alert('Network error: ' + err.message);
+    } finally {
+      isSubmitting = false;
+      btn.disabled = false;
+      input.disabled = false;
+      btn.innerHTML = '<span>Submit Answer</span> <i class="bi bi-arrow-right-short ms-1 fs-5"></i>';
+      input.focus();
+    }
+  }
+
+  function showCompletionState(summaryText) {
+    document.getElementById('answer-dock').classList.add('d-none');
+    document.getElementById('session-badge').textContent = 'Completed';
+    document.getElementById('session-badge').className = 'badge bg-success text-white rounded-pill px-2.5 py-1';
+
+    const summaryCard = document.getElementById('summary-card');
+    document.getElementById('summary-text-content').textContent = summaryText || 'You have successfully completed all 6 interview turns with solid competency demonstration.';
+    summaryCard.classList.remove('d-none');
+
+    summaryCard.scrollIntoView({ behavior: 'smooth' });
+  }
+</script>
+{% endblock %}

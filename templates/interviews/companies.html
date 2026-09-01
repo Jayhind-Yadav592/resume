@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Company Question Bank — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+  <!-- Header -->
+  <div class="text-center max-w-2xl mx-auto mb-4">
+    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill glass-badge small fw-bold mb-2 shadow-xs">
+      <span class="badge bg-primary rounded-pill px-2 py-0.5" style="font-size: 0.72rem;">✨ Curated Questions</span>
+      <span>Company-Wise Interview Prep</span>
+    </div>
+    <h1 class="h3 fw-extrabold text-dark mb-1">Top Tech Company Question Bank</h1>
+    <p class="text-secondary small mb-0">Practice high-yield technical and system design questions asked at top product firms and service leaders.</p>
+  </div>
+
+  <!-- Search & Company Filters -->
+  <div class="card-custom p-3 p-md-4 mb-4 shadow-sm border-0">
+    <div class="row g-3 align-items-center mb-3">
+      <div class="col-md-7">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0 text-secondary" style="border-color: rgba(226, 232, 240, 0.8);">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="text" id="filter-search" oninput="applyFilters()" class="form-control border-start-0 ps-0 bg-white" placeholder="Search questions by topic (e.g. Redis, SQL, System Design, Concurrency)..." style="border-color: rgba(226, 232, 240, 0.8);">
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="d-flex gap-2 justify-content-md-end">
+          <select id="filter-difficulty" onchange="applyFilters()" class="form-select form-select-sm bg-white" style="border-color: rgba(226, 232, 240, 0.8); max-width: 150px;">
+            <option value="">All Difficulties</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+          <a href="/interviews/setup/" class="btn btn-primary-custom btn-sm px-3 shadow-xs">
+            <i class="bi bi-camera-video me-1"></i> Live Meeting Room
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Filter Pills -->
+    <div class="d-flex flex-wrap gap-1.5" id="company-pills-container">
+      <button type="button" onclick="selectCompany('')" class="btn btn-sm btn-primary-custom py-1 px-3 active-pill" id="pill-all">All Companies</button>
+      <button type="button" onclick="selectCompany('Google')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Google</button>
+      <button type="button" onclick="selectCompany('Amazon')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Amazon</button>
+      <button type="button" onclick="selectCompany('Razorpay')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Razorpay</button>
+      <button type="button" onclick="selectCompany('Swiggy')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Swiggy</button>
+      <button type="button" onclick="selectCompany('Zomato')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Zomato</button>
+      <button type="button" onclick="selectCompany('TCS')" class="btn btn-sm btn-outline-custom py-1 px-2.5">TCS</button>
+      <button type="button" onclick="selectCompany('Infosys')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Infosys</button>
+      <button type="button" onclick="selectCompany('Meta')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Meta</button>
+      <button type="button" onclick="selectCompany('Microsoft')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Microsoft</button>
+      <button type="button" onclick="selectCompany('Zepto')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Zepto</button>
+      <button type="button" onclick="selectCompany('Wipro')" class="btn btn-sm btn-outline-custom py-1 px-2.5">Wipro</button>
+    </div>
+  </div>
+
+  <!-- Questions Grid -->
+  <div class="row g-3" id="questions-grid">
+    <!-- Populated via JS -->
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let allQuestions = [];
+  let selectedCompanyFilter = '';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await fetchCompanyQuestions();
+  });
+
+  async function fetchCompanyQuestions() {
+    try {
+      const res = await fetch('/api/v1/interviews/company-questions/');
+      const data = await res.json();
+      allQuestions = data.questions || [];
+      renderQuestions(allQuestions);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function selectCompany(companyName) {
+    selectedCompanyFilter = companyName;
+    const buttons = document.querySelectorAll('#company-pills-container button');
+    buttons.forEach(btn => {
+      if ((companyName === '' && btn.id === 'pill-all') || (companyName && btn.textContent.includes(companyName))) {
+        btn.className = 'btn btn-sm btn-primary-custom py-1 px-3 shadow-xs';
+      } else {
+        btn.className = 'btn btn-sm btn-outline-custom py-1 px-2.5';
+      }
+    });
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const searchVal = document.getElementById('filter-search').value.toLowerCase().trim();
+    const diffVal = document.getElementById('filter-difficulty').value.toLowerCase();
+
+    const filtered = allQuestions.filter(q => {
+      const matchCompany = !selectedCompanyFilter || q.company.toLowerCase() === selectedCompanyFilter.toLowerCase();
+      const matchDiff = !diffVal || q.difficulty.toLowerCase() === diffVal;
+      const matchSearch = !searchVal || 
+        q.question.toLowerCase().includes(searchVal) ||
+        q.category.toLowerCase().includes(searchVal) ||
+        q.company.toLowerCase().includes(searchVal) ||
+        (q.sample_topics && q.sample_topics.some(t => t.toLowerCase().includes(searchVal)));
+      return matchCompany && matchDiff && matchSearch;
+    });
+
+    renderQuestions(filtered);
+  }
+
+  function renderQuestions(questions) {
+    const grid = document.getElementById('questions-grid');
+    grid.innerHTML = '';
+
+    if (questions.length === 0) {
+      grid.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <div class="text-secondary small">No questions matched your search criteria. Try a different topic or clear filters.</div>
+        </div>
+      `;
+      return;
+    }
+
+    questions.forEach(q => {
+      const col = document.createElement('div');
+      col.className = 'col-md-6';
+
+      let diffBadge = '';
+      if (q.difficulty === 'Hard') diffBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small">Hard</span>';
+      else if (q.difficulty === 'Medium') diffBadge = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill small">Medium</span>';
+      else diffBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small">Easy</span>';
+
+      const topics = (q.sample_topics || []).map(t => `<span class="badge bg-light text-secondary border rounded-pill me-1" style="font-size: 0.7rem;">#${t}</span>`).join('');
+      const interviewUrl = `/interviews/setup/?role=${encodeURIComponent(q.role + ' (' + q.company + ')')}`;
+
+      col.innerHTML = `
+        <div class="card-custom h-100 p-4 d-flex flex-column justify-content-between shadow-sm border-0">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary text-white rounded-pill px-2.5 py-1 small fw-bold">${q.company}</span>
+                <span class="small fw-semibold text-secondary" style="font-size: 0.78rem;">${q.role}</span>
+              </div>
+              ${diffBadge}
+            </div>
+            <div class="small text-primary fw-bold mb-2" style="font-size: 0.78rem;">
+              <i class="bi bi-folder2-open me-1"></i> ${q.category}
+            </div>
+            <h3 class="fs-6 fw-bold text-dark mb-3" style="line-height: 1.5;">${q.question}</h3>
+            
+            <div class="p-2.5 rounded-3 mb-3" style="background: rgba(241, 245, 249, 0.6); border: 1px solid rgba(226, 232, 240, 0.8);">
+              <div class="small fw-bold text-secondary mb-1" style="font-size: 0.75rem;">
+                <i class="bi bi-lightbulb text-warning me-1"></i> Key Technical Hint:
+              </div>
+              <p class="text-secondary small mb-0" style="font-size: 0.78rem; line-height: 1.45;">${q.hint}</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="mb-3">${topics}</div>
+            <a href="${interviewUrl}" class="btn btn-outline-custom btn-sm w-100 py-2">
+              <i class="bi bi-camera-video text-primary me-1"></i> Practice Live in AI Mock Room ↗
+            </a>
+          </div>
+        </div>
+      `;
+      grid.appendChild(col);
+    });
+  }
+</script>
+{% endblock %}

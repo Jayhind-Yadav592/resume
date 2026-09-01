@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:16-alpine
+    container_name: resumeforge_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: resumeforge_db
+      POSTGRES_USER: resumeforge_user
+      POSTGRES_PASSWORD: resumeforge_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resumeforge_user -d resumeforge_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis Broker & Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: resumeforge_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Django Web Application (Gunicorn)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resumeforge_web
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn resumeforge.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=production-secret-key-change-this-in-env-file
+      - ALLOWED_HOSTS=localhost,127.0.0.1,web
+      - DATABASE_URL=postgresql://resumeforge_user:resumeforge_password@db:5432/resumeforge_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_TASK_ALWAYS_EAGER=False
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=llama-3.3-70b-versatile
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+
+  # Celery Asynchronous Task Worker
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resumeforge_celery_worker
+    restart: unless-stopped
+    command: celery -A resumeforge worker -l INFO --concurrency=4
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=production-secret-key-change-this-in-env-file
+      - DATABASE_URL=postgresql://resumeforge_user:resumeforge_password@db:5432/resumeforge_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_TASK_ALWAYS_EAGER=False
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - media_volume:/app/media
+
+  # Celery Beat Periodic Scheduler (Weekly Digests)
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resumeforge_celery_beat
+    restart: unless-stopped
+    command: celery -A resumeforge beat -l INFO
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=production-secret-key-change-this-in-env-file
+      - DATABASE_URL=postgresql://resumeforge_user:resumeforge_password@db:5432/resumeforge_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:

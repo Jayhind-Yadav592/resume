@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Analyzing Resume — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="container py-5 py-lg-6">
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+      <div class="card-custom p-5 shadow-sm border-0 bg-white text-center">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-primary bg-primary-subtle mb-4" style="width: 80px; height: 80px;">
+          <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+        </div>
+
+        <h1 class="h4 fw-bold text-dark mb-2" id="proc-title">Scoring Your Resume...</h1>
+        <p class="text-secondary small mb-4" id="proc-desc">
+          Llama-3.3-70b is evaluating your resume text against the target requirements.
+        </p>
+
+        <div class="progress mb-3 mx-auto" style="height: 10px; max-width: 400px;">
+          <div id="proc-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 40%;"></div>
+        </div>
+
+        <div class="small text-muted font-monospace" id="proc-status">
+          Status: Processing asynchronous task...
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const scanId = urlParams.get('id');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    if (!token || !scanId) {
+      window.location.href = '/resumes/dashboard/';
+      return;
+    }
+
+    const progressBar = document.getElementById('proc-bar');
+    const statusText = document.getElementById('proc-status');
+    let progress = 40;
+
+    const interval = setInterval(async () => {
+      progress = Math.min(progress + 15, 90);
+      progressBar.style.width = `${progress}%`;
+
+      try {
+        const res = await fetch(`/api/v1/resumes/scan/${scanId}/status/`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+          const scan = await res.json();
+          statusText.textContent = `Status: ${scan.status.toUpperCase()}`;
+
+          if (scan.status === 'completed') {
+            clearInterval(interval);
+            progressBar.style.width = '100%';
+            progressBar.className = 'progress-bar bg-success';
+            document.getElementById('proc-title').textContent = 'Analysis Completed!';
+            setTimeout(() => {
+              window.location.href = `/resumes/report/?id=${scanId}`;
+            }, 600);
+          } else if (scan.status === 'failed') {
+            clearInterval(interval);
+            alert('Scan failed: ' + (scan.error_message || 'Could not parse resume'));
+            window.location.href = '/resumes/dashboard/';
+          }
+        }
+      } catch (e) {}
+    }, 1200);
+  });
+</script>
+{% endblock %}

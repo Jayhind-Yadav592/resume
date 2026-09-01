@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Resume for ATS Scan — ResumeForge AI{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+      <!-- Upload Card -->
+      <div class="card-custom p-4 p-md-5 shadow-lg border-0" id="upload-card">
+        <!-- Header -->
+        <div class="mb-4 text-center text-md-start">
+          <div class="d-inline-flex align-items-center gap-2 text-primary small fw-bold mb-2">
+            <i class="bi bi-file-earmark-check-fill"></i>
+            <span>AI ATS Resume Matcher</span>
+          </div>
+          <h1 class="h3 fw-extrabold text-dark mb-2">Scan Your Resume</h1>
+          <p class="text-secondary small mb-0">Upload your PDF resume and paste the target job requirements to calculate your match score.</p>
+        </div>
+
+        <!-- Inline Alert Error -->
+        <div id="upload-alert" class="alert d-none mb-4 py-2 px-3 small rounded-3" role="alert"></div>
+
+        <form id="upload-form" onsubmit="handleResumeUpload(event)">
+          <!-- Target Role Input -->
+          <div class="mb-4">
+            <label for="job-title" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.75rem;">
+              Target Job Title / Role
+            </label>
+            <input type="text" class="form-control bg-white" id="job-title" placeholder="e.g. Senior Python / Django Developer" required style="border-color: rgba(226, 232, 240, 0.8);">
+          </div>
+
+          <!-- Drag & Drop File Zone -->
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.75rem;">
+              Resume PDF (Max 5MB)
+            </label>
+
+            <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+              <input type="file" id="file-input" class="d-none" accept=".pdf" onchange="handleFileSelected(event)">
+              <div class="drop-zone-icon">
+                <i class="bi bi-cloud-arrow-up-fill text-primary"></i>
+              </div>
+              <h4 class="fs-6 fw-bold text-dark mb-1" id="file-name-display">
+                Drag and drop your PDF resume here, or <span class="text-primary text-decoration-underline">browse</span>
+              </h4>
+              <p class="text-muted small mb-0" id="file-size-display">
+                Supports standard single/multi-page PDF documents up to 5 MB
+              </p>
+            </div>
+            <div id="file-validation-msg" class="text-danger small mt-1.5 d-none"></div>
+          </div>
+
+          <!-- Job Description Textarea -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="jd-text" class="form-label small fw-bold text-secondary text-uppercase mb-0" style="font-size: 0.75rem;">
+                Target Job Description (Requirements)
+              </label>
+              <button type="button" onclick="insertSampleJD()" class="btn btn-link btn-sm text-primary p-0 small text-decoration-none fw-semibold">
+                <i class="bi bi-magic me-1"></i> Insert Sample JD
+              </button>
+            </div>
+            <textarea class="form-control bg-white" id="jd-text" rows="6" placeholder="Paste the job description, required technical skills, qualifications, and responsibilities here (minimum 50 characters)..." required minlength="50" style="border-color: rgba(226, 232, 240, 0.8);"></textarea>
+            <div class="form-text text-muted small">At least 50 characters required for high-accuracy semantic matching.</div>
+          </div>
+
+          <!-- Submit Button (Disabled until valid file attached) -->
+          <button type="submit" id="btn-submit-upload" class="btn btn-primary-custom w-100 py-3 shadow" disabled>
+            <i class="bi bi-lightning-charge"></i> Start ATS AI Analysis
+          </button>
+        </form>
+      </div>
+
+      <!-- Processing State Card (Hidden by default) -->
+      <div class="card-custom p-4 p-md-5 shadow-lg border-0 text-center d-none" id="processing-card">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-primary bg-primary-subtle mb-4" style="width: 72px; height: 72px;">
+          <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+        </div>
+
+        <h2 class="h4 fw-bold text-dark mb-2" id="processing-title">Analyzing Your Resume...</h2>
+        <p class="text-secondary small mb-4" id="processing-sub">
+          Extracting text structure, measuring semantic keyword match, and formatting scores.
+        </p>
+
+        <!-- Progress Bar -->
+        <div class="progress mb-3 mx-auto" style="height: 10px; max-width: 420px;">
+          <div id="processing-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 35%;"></div>
+        </div>
+
+        <div class="small text-muted font-monospace" id="processing-status-text">
+          Status: Polling async worker...
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let selectedFile = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('resumeforge_access_token');
+    if (!token) {
+      window.location.href = '/login/';
+      return;
+    }
+
+    setupDragAndDrop();
+  });
+
+  function setupDragAndDrop() {
+    const dropZone = document.getElementById('drop-zone');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files && files.length > 0) {
+        validateAndSetFile(files[0]);
+      }
+    });
+  }
+
+  function handleFileSelected(e) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      validateAndSetFile(files[0]);
+    }
+  }
+
+  function validateAndSetFile(file) {
+    const errorEl = document.getElementById('file-validation-msg');
+    const nameDisplay = document.getElementById('file-name-display');
+    const sizeDisplay = document.getElementById('file-size-display');
+    const submitBtn = document.getElementById('btn-submit-upload');
+
+    errorEl.classList.add('d-none');
+    errorEl.textContent = '';
+
+    // Check extension
+    if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+      errorEl.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i> Only PDF documents are supported.';
+      errorEl.classList.remove('d-none');
+      selectedFile = null;
+      submitBtn.disabled = true;
+      nameDisplay.innerHTML = 'Drag and drop your PDF resume here, or <span class="text-primary text-decoration-underline">browse</span>';
+      sizeDisplay.textContent = 'Supports standard single/multi-page PDF documents up to 5 MB';
+      return;
+    }
+
+    // Check size (5MB = 5 * 1024 * 1024 bytes)
+    if (file.size > 5 * 1024 * 1024) {
+      errorEl.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i> File size exceeds 5MB (${(file.size / (1024 * 1024)).toFixed(2)} MB). Please upload a smaller PDF.`;
+      errorEl.classList.remove('d-none');
+      selectedFile = null;
+      submitBtn.disabled = true;
+      return;
+    }
+
+    selectedFile = file;
+    nameDisplay.innerHTML = `<i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> ${file.name}`;
+    sizeDisplay.innerHTML = `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Ready (${(file.size / 1024).toFixed(1)} KB)</span>`;
+    submitBtn.disabled = false;
+  }
+
+  function insertSampleJD() {
+    document.getElementById('job-title').value = 'Senior Fullstack Python Engineer';
+    document.getElementById('jd-text').value = `We are looking for a Senior Fullstack Python Developer with 4+ years experience.
+Key Responsibilities:
+- Design and develop scalable backend APIs using Python, Django, FastAPI, and PostgreSQL.
+- Implement responsive frontend interfaces using React, TypeScript, and modern CSS frameworks.
+- Deploy and manage containerized microservices using Docker, Kubernetes, and AWS (ECS, S3, RDS).
+- Write automated unit and integration tests using Pytest.
+- Collaborate across cross-functional teams in an Agile/Scrum environment.`;
+  }
+
+  async function handleResumeUpload(e) {
+    e.preventDefault();
+    if (!selectedFile) {
+      alert('Please attach a PDF resume before submitting.');
+      return;
+    }
+
+    const title = document.getElementById('job-title').value.trim();
+    const jdText = document.getElementById('jd-text').value.trim();
+    const alertBox = document.getElementById('upload-alert');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    alertBox.classList.add('d-none');
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('title', title);
+    formData.append('job_description', jdText);
+
+    // Switch to processing card UI
+    document.getElementById('upload-card').classList.add('d-none');
+    document.getElementById('processing-card').classList.remove('d-none');
+
+    try {
+      const res = await fetch('/api/v1/resumes/upload/', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData
+      });
+      const data = await res.json();
+
+      if (res.status === 202) {
+        const scanId = data.scan.id;
+        pollScanStatus(scanId, token);
+      } else if (res.status === 402) {
+        // Free quota exceeded
+        document.getElementById('upload-card').classList.remove('d-none');
+        document.getElementById('processing-card').classList.add('d-none');
+        alertBox.className = 'alert alert-warning py-3 px-4 small rounded-3';
+        alertBox.innerHTML = `
+          <div class="fw-bold mb-1"><i class="bi bi-lock-fill me-1"></i> Free Scan Limit Reached</div>
+          <div>${data.detail || 'You have used all 3 free scans for this month.'}</div>
+          <div class="mt-2"><a href="/pricing/" class="btn btn-primary-custom btn-sm">Upgrade to Pro for Unlimited Scans &rarr;</a></div>
+        `;
+        alertBox.classList.remove('d-none');
+      } else {
+        throw new Error(data.detail || JSON.stringify(data));
+      }
+    } catch (err) {
+      document.getElementById('upload-card').classList.remove('d-none');
+      document.getElementById('processing-card').classList.add('d-none');
+      alertBox.className = 'alert alert-danger py-2 px-3 small rounded-3';
+      alertBox.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i> Upload failed: ${err.message}`;
+      alertBox.classList.remove('d-none');
+    }
+  }
+
+  async function pollScanStatus(scanId, token) {
+    const progressBar = document.getElementById('processing-progress-bar');
+    const statusText = document.getElementById('processing-status-text');
+    let progress = 45;
+
+    const interval = setInterval(async () => {
+      progress = Math.min(progress + 15, 90);
+      progressBar.style.width = `${progress}%`;
+
+      try {
+        const res = await fetch(`/api/v1/resumes/scan/${scanId}/status/`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+          const scan = await res.json();
+          statusText.textContent = `Status: ${scan.status.toUpperCase()}`;
+
+          if (scan.status === 'completed') {
+            clearInterval(interval);
+            progressBar.style.width = '100%';
+            progressBar.className = 'progress-bar bg-success';
+            document.getElementById('processing-title').textContent = 'Analysis Complete!';
+            setTimeout(() => {
+              window.location.href = `/resumes/report/?id=${scanId}`;
+            }, 600);
+          } else if (scan.status === 'failed') {
+            clearInterval(interval);
+            alert('Scan analysis failed: ' + (scan.error_message || 'Unknown error'));
+            window.location.href = '/resumes/dashboard/';
+          }
+        }
+      } catch (e) {}
+    }, 1200);
+  }
+</script>
+{% endblock %}

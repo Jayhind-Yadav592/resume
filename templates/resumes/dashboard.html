@@ -1,0 +1,807 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — ResumeForge AI{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ==========================================================================
+     ResumeForge Modern Professional SaaS Dashboard
+     ========================================================================== */
+  .dashboard-wrapper {
+    padding-top: 1.25rem;
+    padding-bottom: 3.5rem;
+  }
+
+  /* Left Clean Modern Sidebar */
+  .saas-sidebar {
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    padding: 1.25rem 0.85rem;
+  }
+
+  /* User Profile Badge */
+  .user-profile-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem;
+    background: #F8FAFC;
+    border-radius: 10px;
+    border: 1px solid #E2E8F0;
+    margin-bottom: 1.25rem;
+  }
+
+  .user-avatar-initial {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+  }
+
+  .nav-section-title {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94A3B8;
+    padding: 0.5rem 0.75rem 0.35rem 0.75rem;
+  }
+
+  /* Sidebar Navigation Items */
+  .sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.85rem;
+    border-radius: 9px;
+    color: #334155;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    transition: all 0.15s ease;
+  }
+
+  .sidebar-nav-link .link-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .sidebar-nav-link .icon-box {
+    width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    color: #64748B;
+    transition: color 0.15s ease;
+  }
+
+  .sidebar-nav-link .arrow-icon {
+    font-size: 0.75rem;
+    color: #94A3B8;
+    transition: transform 0.15s ease, color 0.15s ease;
+  }
+
+  .sidebar-nav-link:hover {
+    background-color: #F1F5F9;
+    color: #4F46E5;
+  }
+
+  .sidebar-nav-link:hover .icon-box {
+    color: #4F46E5;
+  }
+
+  .sidebar-nav-link:hover .arrow-icon {
+    transform: translateX(3px);
+    color: #4F46E5;
+  }
+
+  .sidebar-nav-link.active {
+    background: linear-gradient(90deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.03) 100%);
+    color: #4F46E5;
+    font-weight: 700;
+    border-left: 3.5px solid #4F46E5;
+  }
+
+  .sidebar-nav-link.active .icon-box {
+    color: #4F46E5;
+  }
+
+  /* Main Workspace Cards */
+  .dashboard-card {
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+
+  .dashboard-card-header {
+    padding: 1.15rem 1.5rem;
+    border-bottom: 1px solid #F1F5F9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dashboard-card-body {
+    padding: 1.5rem;
+  }
+
+  /* Quick Action Feature Cards */
+  .quick-feature-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: block;
+    height: 100%;
+    position: relative;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  }
+
+  .quick-feature-card:hover {
+    border-color: #4F46E5;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.08);
+  }
+
+  .quick-feature-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 0.85rem;
+  }
+
+  /* Time Filter Pills (1D, 5D, 1M, 1Y) */
+  .time-pill-btn {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748B;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    background: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .time-pill-btn.active,
+  .time-pill-btn:hover {
+    background: #EEF2FF;
+    color: #4F46E5;
+    border-color: #C7D2FE;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 dashboard-wrapper">
+  <div class="row g-4">
+    <!-- Left Column: Clean SaaS Sidebar -->
+    <div class="col-lg-3 col-xl-2.5" style="max-width: 280px;">
+      <div class="saas-sidebar sticky-top" style="top: 80px; z-index: 20;">
+        <!-- User Profile Card -->
+        <div class="user-profile-badge">
+          <div class="user-avatar-initial" id="avatar-initials">R</div>
+          <div style="min-width: 0;">
+            <div class="fw-bold text-dark text-truncate small" id="user-display-name">Rajesh Kumar</div>
+            <div class="text-success small fw-semibold" style="font-size: 0.72rem;" id="user-plan-sub">
+              <i class="bi bi-patch-check-fill me-1"></i> Free Student
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Menu -->
+        <div class="nav-section-title">Main Navigation</div>
+
+        <!-- 1. Dashboard -->
+        <a href="/resumes/dashboard/" class="sidebar-nav-link active">
+          <div class="link-content">
+            <span class="icon-box"><i class="bi bi-speedometer2 text-primary"></i></span>
+            <span>Dashboard</span>
+          </div>
+          <i class="bi bi-chevron-right arrow-icon"></i>
+        </a>
+
+        <!-- 2. New ATS Scan -->
+        <a href="/resumes/upload/" class="sidebar-nav-link">
+          <div class="link-content">
+            <span class="icon-box"><i class="bi bi-file-earmark-arrow-up text-primary"></i></span>
+            <span>New ATS Scan</span>
+          </div>
+          <i class="bi bi-chevron-right arrow-icon"></i>
+        </a>
+
+        <!-- 3. Builder -->
+        <a href="/resumes/builder/" class="sidebar-nav-link">
+          <div class="link-content">
+            <span class="icon-box"><i class="bi bi-pencil-square text-indigo"></i></span>
+            <span>Builder</span>
+          </div>
+          <i class="bi bi-chevron-right arrow-icon"></i>
+        </a>
+
+        <!-- 4. Practice -->
+        <a href="/practice/mcq/" class="sidebar-nav-link">
+          <div class="link-content">
+            <span class="icon-box"><i class="bi bi-code-slash text-success"></i></span>
+            <span>Practice</span>
+          </div>
+          <i class="bi bi-chevron-right arrow-icon"></i>
+        </a>
+
+        <!-- 5. Mock Interview -->
+        <a href="/interviews/setup/" class="sidebar-nav-link">
+          <div class="link-content">
+            <span class="icon-box"><i class="bi bi-camera-video text-danger"></i></span>
+            <span>Mock Interview</span>
+          </div>
+          <i class="bi bi-chevron-right arrow-icon"></i>
+        </a>
+
+        <!-- 6. Question Bank -->
+        <a href="/interviews/companies/" class="sidebar-nav-link">
+          <div class="link-content">
+            <span class="icon-box"><i class="bi bi-buildings text-info"></i></span>
+            <span>Question Bank</span>
+          </div>
+          <i class="bi bi-chevron-right arrow-icon"></i>
+        </a>
+
+        <!-- 7. Salary Estimator -->
+        <a href="/tools/salary-estimator/" class="sidebar-nav-link">
+          <div class="link-content">
+            <span class="icon-box"><i class="bi bi-cash-stack text-success"></i></span>
+            <span>Salary Estimator</span>
+          </div>
+          <i class="bi bi-chevron-right arrow-icon"></i>
+        </a>
+
+        <!-- Account Section -->
+        <div class="nav-section-title mt-3">Account & Pro</div>
+
+        <!-- 8. Pro Plan -->
+        <a href="/pricing/" class="sidebar-nav-link">
+          <div class="link-content">
+            <span class="icon-box"><i class="bi bi-star-fill text-warning"></i></span>
+            <span class="text-warning fw-bold">Pro Plan</span>
+          </div>
+          <i class="bi bi-chevron-right arrow-icon"></i>
+        </a>
+
+        <!-- 9. Sign Out -->
+        <a href="javascript:void(0)" onclick="handleGlobalLogout()" class="sidebar-nav-link text-danger">
+          <div class="link-content">
+            <span class="icon-box"><i class="bi bi-box-arrow-right text-danger"></i></span>
+            <span>Sign Out</span>
+          </div>
+          <i class="bi bi-box-arrow-right arrow-icon text-danger"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Right Column: Clean SaaS Workspace -->
+    <div class="col-lg-9 col-xl-9.5">
+      <!-- Top Clean Header Strip -->
+      <div class="dashboard-card mb-4">
+        <div class="p-3 p-md-4">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <h1 class="h4 fw-extrabold text-dark mb-0">Candidate Dashboard</h1>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small px-2.5 py-1">ATS Optimization</span>
+              </div>
+              <div class="text-secondary small">
+                Track your resume match trajectory, practice technical assessments, and prepare for interviews.
+              </div>
+            </div>
+
+            <!-- Header Action Controls -->
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <a href="/resumes/upload/" class="btn btn-primary-custom btn-sm px-3.5 shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> New Scan
+              </a>
+              <a href="/resumes/builder/" class="btn btn-outline-custom btn-sm px-3 shadow-xs">
+                <i class="bi bi-pencil-square me-1"></i> Builder
+              </a>
+              <a href="/practice/mcq/" class="btn btn-outline-custom btn-sm px-3 shadow-xs">
+                <i class="bi bi-code-slash me-1 text-success"></i> Practice
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Full-Width ATS Score Performance & Growth Card -->
+      <div class="dashboard-card mb-4">
+        <div class="dashboard-card-header">
+          <div>
+            <h2 class="fs-6 fw-bold text-dark mb-0">ATS Score & Performance Trajectory</h2>
+            <div class="text-secondary small" style="font-size: 0.78rem;">
+              Real-time score progress across your analyzed resume versions.
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-1">
+            <button class="time-pill-btn active">1D</button>
+            <button class="time-pill-btn">5D</button>
+            <button class="time-pill-btn">1M</button>
+            <button class="time-pill-btn">1Y</button>
+          </div>
+        </div>
+
+        <div class="dashboard-card-body">
+          <!-- Summary Metrics Strip -->
+          <div class="row g-3 mb-4 pb-3 border-bottom text-center text-sm-start">
+            <div class="col-6 col-md-3">
+              <div class="text-muted small fw-bold" style="font-size: 0.72rem;">BASELINE SCORE</div>
+              <div class="fw-extrabold text-dark fs-5" id="stat-baseline">--</div>
+              <div class="text-secondary small" style="font-size: 0.7rem;">First analyzed version</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="text-muted small fw-bold" style="font-size: 0.72rem;">LATEST SCORE</div>
+              <div class="fw-extrabold text-primary fs-5" id="stat-latest">--</div>
+              <div class="text-secondary small" style="font-size: 0.7rem;">Most recent version</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="text-muted small fw-bold" style="font-size: 0.72rem;">NET IMPROVEMENT</div>
+              <div class="fw-extrabold text-success fs-5" id="stat-growth">--</div>
+              <div class="text-secondary small" style="font-size: 0.7rem;">Score progression delta</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="text-muted small fw-bold" style="font-size: 0.72rem;">TOTAL SCANS</div>
+              <div class="fw-extrabold text-dark fs-5" id="stat-total-scans">0 Scans</div>
+              <div class="text-success small fw-semibold" style="font-size: 0.7rem;">Unlimited Free Tier</div>
+            </div>
+          </div>
+
+          <!-- Interactive Chart.js Area Chart -->
+          <div style="height: 260px; position: relative;">
+            <canvas id="scoreTrendChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Feature Cards (3 SaaS Power Tools) -->
+      <div class="row g-3 mb-4">
+        <!-- Card 1: Resume Builder -->
+        <div class="col-md-4">
+          <a href="/resumes/builder/" class="quick-feature-card">
+            <div class="quick-feature-icon bg-primary-subtle text-primary">
+              <i class="bi bi-pencil-square"></i>
+            </div>
+            <h3 class="fs-6 fw-bold text-dark mb-1">Resume Studio</h3>
+            <p class="text-secondary small mb-2" style="font-size: 0.8125rem;">
+              Executive single-column LaTeX template with 1-click A4 PDF download.
+            </p>
+            <span class="text-primary fw-bold small">Open Builder →</span>
+          </a>
+        </div>
+
+        <!-- Card 2: Practice Suite -->
+        <div class="col-md-4">
+          <a href="/practice/mcq/" class="quick-feature-card">
+            <div class="quick-feature-icon bg-success-subtle text-success">
+              <i class="bi bi-check2-square"></i>
+            </div>
+            <h3 class="fs-6 fw-bold text-dark mb-1">Practice Suite</h3>
+            <p class="text-secondary small mb-2" style="font-size: 0.8125rem;">
+              Timed MCQ quizzes and live coding arena with execution test cases.
+            </p>
+            <span class="text-success fw-bold small">Start Practice →</span>
+          </a>
+        </div>
+
+        <!-- Card 3: AI Mock Interview -->
+        <div class="col-md-4">
+          <a href="/interviews/setup/" class="quick-feature-card">
+            <div class="quick-feature-icon bg-danger-subtle text-danger">
+              <i class="bi bi-camera-video"></i>
+            </div>
+            <h3 class="fs-6 fw-bold text-dark mb-1">AI Mock Interview</h3>
+            <p class="text-secondary small mb-2" style="font-size: 0.8125rem;">
+              Realistic Google Meet styled voice simulation with AI scoring.
+            </p>
+            <span class="text-danger fw-bold small">Launch Session →</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- GitHub Profile Analyzer Tool (Clean SaaS Card) -->
+      <div class="dashboard-card mb-4" id="github-analyzer-section">
+        <div class="dashboard-card-header">
+          <h3 class="fs-6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-github text-dark"></i> GitHub Profile Analyzer
+          </h3>
+          <span class="badge bg-primary-subtle text-primary rounded-pill small" style="font-size: 0.7rem;">Developer Tier</span>
+        </div>
+        <div class="dashboard-card-body">
+          <p class="text-secondary small mb-3" style="font-size: 0.8125rem;">
+            Verify your public repositories, languages, and calculate a verified developer score.
+          </p>
+          <div class="input-group mb-3" style="max-width: 520px;">
+            <span class="input-group-text bg-light text-secondary border-end-0 small">github.com/</span>
+            <input type="text" id="github-username-input" class="form-control form-control-sm border-start-0 ps-0" placeholder="username (e.g. torvalds)">
+            <button type="button" onclick="analyzeGitHub()" id="btn-analyze-github" class="btn btn-primary-custom btn-sm px-3.5">
+              <i class="bi bi-search me-1"></i> Analyze
+            </button>
+          </div>
+
+          <div id="github-result" class="d-none p-3 rounded-3 bg-light border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <img id="gh-avatar" src="" class="rounded-circle border" width="38" height="38" alt="Avatar">
+                <div>
+                  <div class="fw-bold text-dark small" id="gh-name">Developer</div>
+                  <div class="text-muted" style="font-size: 0.72rem;" id="gh-bio">Bio</div>
+                </div>
+              </div>
+              <span class="badge bg-success text-white px-2.5 py-1 rounded-pill fw-bold" id="gh-score">88/100</span>
+            </div>
+            <div class="d-flex gap-3 text-secondary small py-2 mb-2 border-top border-bottom" style="font-size: 0.75rem;">
+              <div><strong>Repos:</strong> <span id="gh-repos">0</span></div>
+              <div><strong>Stars:</strong> <span id="gh-stars">0</span></div>
+              <div><strong>Forks:</strong> <span id="gh-forks">0</span></div>
+            </div>
+            <div class="d-flex flex-wrap gap-1 mb-2" id="gh-badges"></div>
+            <div class="small text-secondary" style="font-size: 0.75rem;" id="gh-synergy"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Scan History Table -->
+      <div class="dashboard-card">
+        <div class="dashboard-card-header">
+          <h3 class="fs-6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-clock-history text-primary"></i> Detailed Resume Scan History
+          </h3>
+          <a href="/resumes/upload/" class="small text-primary fw-bold text-decoration-none">
+            <i class="bi bi-plus-circle me-1"></i> Upload New Resume
+          </a>
+        </div>
+
+        <div class="p-0">
+          <div id="scans-loading" class="text-center py-5">
+            <div class="spinner-border text-primary spinner-border-sm mb-2" role="status"></div>
+            <div class="text-secondary small">Loading records...</div>
+          </div>
+
+          <div id="scans-empty" class="text-center py-5 d-none">
+            <i class="bi bi-file-earmark-arrow-up fs-2 text-muted mb-2"></i>
+            <h4 class="h6 fw-bold text-dark mb-1">No Resume Scans Yet</h4>
+            <p class="text-secondary small mb-3">Upload your first resume to generate scorecards and analytics.</p>
+            <a href="/resumes/upload/" class="btn btn-primary-custom btn-sm">Upload Resume</a>
+          </div>
+
+          <div class="table-responsive d-none" id="scans-table-container">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light text-secondary small text-uppercase" style="font-size: 0.72rem;">
+                <tr>
+                  <th class="ps-4">Target Position</th>
+                  <th>Overall Score</th>
+                  <th>Score Delta</th>
+                  <th>Keywords</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th class="pe-4 text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="scans-table-body" class="small">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let trendChartInstance = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('resumeforge_access_token');
+    if (!token) {
+      window.location.href = '/login/';
+      return;
+    }
+
+    await loadUserProfile(token);
+    await loadScanHistory(token);
+  });
+
+  async function loadUserProfile(token) {
+    try {
+      const res = await fetch('/api/v1/auth/me/', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const user = await res.json();
+        const nameDisplay = document.getElementById('user-display-name');
+        const planSub = document.getElementById('user-plan-sub');
+        const avatarInitial = document.getElementById('avatar-initials');
+
+        const fullName = user.first_name || user.username || 'Candidate';
+        if (nameDisplay) nameDisplay.textContent = fullName;
+        if (avatarInitial) avatarInitial.textContent = fullName.charAt(0).toUpperCase();
+
+        if (user.is_pro) {
+          planSub.className = 'text-primary small fw-semibold';
+          planSub.innerHTML = '<i class="bi bi-star-fill text-warning me-1"></i> Pro Active';
+        } else {
+          planSub.className = 'text-success small fw-semibold';
+          planSub.innerHTML = '<i class="bi bi-patch-check-fill me-1"></i> Free Student';
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function loadScanHistory(token) {
+    const loadingEl = document.getElementById('scans-loading');
+    const emptyEl = document.getElementById('scans-empty');
+    const tableContainer = document.getElementById('scans-table-container');
+    const tbody = document.getElementById('scans-table-body');
+
+    try {
+      const res = await fetch('/api/v1/resumes/scans/', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const scans = Array.isArray(data) ? data : (data.results || []);
+
+        loadingEl.classList.add('d-none');
+        document.getElementById('stat-total-scans').textContent = `${scans.length} Scans`;
+
+        if (scans.length === 0) {
+          emptyEl.classList.remove('d-none');
+          document.getElementById('stat-baseline').textContent = '--';
+          document.getElementById('stat-latest').textContent = '--';
+          document.getElementById('stat-growth').textContent = '--';
+          return;
+        }
+
+        const completedScans = scans.filter(s => s.status === 'completed');
+
+        tbody.innerHTML = '';
+        const chronoScans = [...scans].reverse();
+        const scoreMap = {};
+        let prevScore = null;
+        chronoScans.forEach(s => {
+          if (s.status === 'completed') {
+            if (prevScore !== null) {
+              scoreMap[s.id] = s.overall_score - prevScore;
+            } else {
+              scoreMap[s.id] = 0;
+            }
+            prevScore = s.overall_score;
+          }
+        });
+
+        scans.forEach(scan => {
+          const row = document.createElement('tr');
+
+          let scoreBadge = '';
+          if (scan.status === 'completed') {
+            const badgeClass = scan.overall_score >= 80 ? 'score-high' : (scan.overall_score >= 50 ? 'score-medium' : 'score-low');
+            scoreBadge = `<div class="score-circle score-circle-sm ${badgeClass}"><span>${scan.overall_score}%</span></div>`;
+          } else {
+            scoreBadge = `<span class="badge bg-light text-secondary border">--</span>`;
+          }
+
+          let deltaHtml = '<span class="text-muted">--</span>';
+          if (scan.status === 'completed' && scoreMap[scan.id] !== undefined) {
+            const diff = scoreMap[scan.id];
+            if (diff > 0) {
+              deltaHtml = `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace fw-bold">+${diff}% ↑</span>`;
+            } else if (diff < 0) {
+              deltaHtml = `<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill font-monospace fw-bold">${diff}% ↓</span>`;
+            } else {
+              deltaHtml = `<span class="badge bg-light text-secondary border rounded-pill font-monospace">Baseline</span>`;
+            }
+          }
+
+          let statusPill = '';
+          if (scan.status === 'completed') {
+            statusPill = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Completed</span>';
+          } else if (scan.status === 'processing') {
+            statusPill = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill"><i class="bi bi-arrow-repeat spin me-1"></i> Processing</span>';
+          } else if (scan.status === 'failed') {
+            statusPill = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">Failed</span>';
+          } else {
+            statusPill = '<span class="badge bg-light text-secondary border rounded-pill">Pending</span>';
+          }
+
+          const dateStr = new Date(scan.created_at).toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric'
+          });
+
+          row.innerHTML = `
+            <td class="ps-4">
+              <div class="fw-semibold text-dark">${scan.job_description_title || 'Position Scan'}</div>
+              <div class="text-muted" style="font-size: 0.75rem;">Scan #${scan.id}</div>
+            </td>
+            <td>${scoreBadge}</td>
+            <td>${deltaHtml}</td>
+            <td>
+              <div class="fw-semibold text-dark">${scan.keyword_score ? scan.keyword_score + '%' : '--'}</div>
+            </td>
+            <td class="text-secondary">${dateStr}</td>
+            <td>${statusPill}</td>
+            <td class="pe-4 text-end">
+              <div class="d-inline-flex gap-2">
+                <a href="/resumes/report/?id=${scan.id}" class="btn btn-outline-custom btn-sm">
+                  Report <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        tableContainer.classList.remove('d-none');
+
+        if (completedScans.length >= 1) {
+          renderScoreChart(completedScans);
+        }
+      }
+    } catch (err) {
+      loadingEl.innerHTML = `<div class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i> Failed to load scans: ${err.message}</div>`;
+    }
+  }
+
+  function renderScoreChart(completedScans) {
+    const sortedScans = [...completedScans].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const labels = sortedScans.map((s, idx) => {
+      const roleName = s.job_description_title ? (s.job_description_title.length > 18 ? s.job_description_title.substring(0, 18) + '...' : s.job_description_title) : `Scan #${idx + 1}`;
+      return `${roleName} (#${s.id})`;
+    });
+    const dataPoints = sortedScans.map(s => s.overall_score);
+    const keywordPoints = sortedScans.map(s => s.keyword_score || Math.max(30, s.overall_score - 6));
+
+    const firstScore = sortedScans[0].overall_score;
+    const latestScore = sortedScans[sortedScans.length - 1].overall_score;
+    const diff = latestScore - firstScore;
+
+    document.getElementById('stat-baseline').textContent = `${firstScore}%`;
+    document.getElementById('stat-latest').textContent = `${latestScore}%`;
+    document.getElementById('stat-growth').textContent = diff >= 0 ? `+${diff}% ↑` : `${diff}% ↓`;
+
+    const ctx = document.getElementById('scoreTrendChart').getContext('2d');
+    if (trendChartInstance) trendChartInstance.destroy();
+
+    trendChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Overall Match Score (%)',
+            data: dataPoints,
+            borderColor: '#4F46E5',
+            backgroundColor: 'rgba(79, 70, 229, 0.10)',
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#4F46E5',
+            pointBorderColor: '#FFFFFF',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            borderWidth: 2.5
+          },
+          {
+            label: 'Keyword Alignment (%)',
+            data: keywordPoints,
+            borderColor: '#06B6D4',
+            backgroundColor: 'rgba(6, 182, 212, 0.04)',
+            tension: 0.35,
+            fill: true,
+            borderDash: [5, 5],
+            pointBackgroundColor: '#06B6D4',
+            pointBorderColor: '#FFFFFF',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            borderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { boxWidth: 12, font: { size: 11 } }
+          }
+        },
+        scales: {
+          y: { min: 20, max: 100, ticks: { stepSize: 20, callback: (v) => `${v}%` } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  async function analyzeGitHub() {
+    const input = document.getElementById('github-username-input');
+    const val = input.value.trim();
+    const btn = document.getElementById('btn-analyze-github');
+    const resultBox = document.getElementById('github-result');
+    const token = localStorage.getItem('resumeforge_access_token');
+
+    if (!val) {
+      alert('Please enter a GitHub username or URL (e.g. torvalds)');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyzing...';
+
+    try {
+      const res = await fetch('/api/v1/resumes/github-analyze/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ username: val })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('gh-avatar').src = data.avatar_url;
+        document.getElementById('gh-name').textContent = `${data.name} (@${data.username})`;
+        document.getElementById('gh-bio').textContent = data.bio || 'Public Developer';
+        document.getElementById('gh-score').textContent = `${data.developer_score}/100`;
+        document.getElementById('gh-repos').textContent = data.public_repos;
+        document.getElementById('gh-stars').textContent = data.total_stars;
+        document.getElementById('gh-forks').textContent = data.total_forks;
+
+        const badgesContainer = document.getElementById('gh-badges');
+        badgesContainer.innerHTML = '';
+        (data.badges || []).forEach(b => {
+          const badgeSpan = document.createElement('span');
+          badgeSpan.className = 'badge bg-white text-dark border me-1';
+          badgeSpan.style.fontSize = '0.72rem';
+          badgeSpan.innerHTML = `<i class="bi ${b.icon} ${b.color} me-1"></i> ${b.name}`;
+          badgesContainer.appendChild(badgeSpan);
+        });
+
+        const synergyEl = document.getElementById('gh-synergy');
+        synergyEl.innerHTML = `<strong>💡 Resume Synergy:</strong> ${(data.synergy_recommendations || [])[0] || 'Link verified repositories in your resume project sections.'}`;
+
+        resultBox.classList.remove('d-none');
+      } else {
+        alert(data.detail || 'Could not fetch GitHub data.');
+      }
+    } catch (e) {
+      alert('Error analyzing profile: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-search me-1"></i> Analyze';
+    }
+  }
+</script>
+{% endblock %}

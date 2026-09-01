@@ -1,0 +1,1034 @@
+openapi: 3.0.3
+info:
+  title: ResumeForge AI & ATS API
+  version: 1.0.0
+  description: Comprehensive REST API for AI-powered ATS resume parsing, scoring,
+    turn-based mock interviews, and subscription billing.
+paths:
+  /api/v1/auth/login/:
+    post:
+      operationId: api_v1_auth_login_create
+      description: Authenticates username/email and password, returning JWT access
+        and refresh tokens.
+      summary: User Login
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+          description: ''
+  /api/v1/auth/me/:
+    get:
+      operationId: api_v1_auth_me_retrieve
+      description: Returns detailed profile information for the authenticated user.
+      summary: Get Current User Profile
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+  /api/v1/auth/refresh/:
+    post:
+      operationId: api_v1_auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/auth/register/:
+    post:
+      operationId: api_v1_auth_register_create
+      description: Creates a new user account with hashed password and returns access/refresh
+        JWT tokens.
+      summary: Register New User
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+          description: ''
+  /api/v1/billing/create-order/:
+    post:
+      operationId: api_v1_billing_create_order_create
+      description: Initializes Razorpay order for subscription purchase, returning
+        order_id to client.
+      summary: Create Razorpay Order
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrderResponse'
+          description: ''
+  /api/v1/billing/my-subscription/:
+    get:
+      operationId: api_v1_billing_my_subscription_retrieve
+      description: Returns active or latest subscription details for authenticated
+        user.
+      summary: Get Current User Subscription
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+  /api/v1/billing/plans/:
+    get:
+      operationId: api_v1_billing_plans_list
+      description: Returns list of active subscription tiers (Free, Pro Monthly, etc.).
+      summary: List Subscription Plans
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionPlan'
+          description: ''
+  /api/v1/billing/verify-payment/:
+    post:
+      operationId: api_v1_billing_verify_payment_create
+      description: Validates Razorpay payment signature, marks subscription active,
+        and activates Pro for 30 days.
+      summary: Verify Razorpay Payment
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyPaymentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VerifyPaymentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VerifyPaymentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyPaymentResponse'
+          description: ''
+  /api/v1/billing/webhook/:
+    post:
+      operationId: api_v1_billing_webhook_create
+      description: Receives and validates server-to-server webhook events from Razorpay.
+      summary: Razorpay Webhook Handler
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/core/health/:
+    get:
+      operationId: api_v1_core_health_retrieve
+      description: Returns current operational status of the service.
+      summary: API Health Check
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+          description: ''
+  /api/v1/interviews/{session_id}/:
+    get:
+      operationId: api_v1_interviews_retrieve
+      description: Retrieves the entire conversational timeline and assessment summary
+        of an interview session.
+      summary: Get Interview Session Details
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSession'
+          description: ''
+  /api/v1/interviews/{session_id}/answer/:
+    post:
+      operationId: api_v1_interviews_answer_create
+      description: Submits the answer for the active interview question. Returns AI
+        feedback and generates the next question, or the final summary if finished.
+      summary: Submit Answer to Current Question
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnswerQuestionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AnswerQuestionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AnswerQuestionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnswerResponse'
+          description: ''
+  /api/v1/interviews/start/:
+    post:
+      operationId: api_v1_interviews_start_create
+      description: Initializes a new mock interview session and generates Question
+        1 using Groq AI.
+      summary: Start Mock Interview Session
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartInterviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StartInterviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StartInterviewRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSession'
+          description: ''
+  /api/v1/resumes/scan/{id}/:
+    get:
+      operationId: api_v1_resumes_scan_retrieve
+      description: Returns complete ATS breakdown (scores, missing keywords, suggestions)
+        for a given scan ID.
+      summary: Get Scan Result Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResult'
+          description: ''
+  /api/v1/resumes/scan/{id}/status/:
+    get:
+      operationId: api_v1_resumes_scan_status_retrieve
+      description: Returns current status ('pending', 'processing', 'completed', 'failed')
+        and score for polling.
+      summary: Poll Scan Status
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanStatus'
+          description: ''
+  /api/v1/resumes/upload/:
+    post:
+      operationId: api_v1_resumes_upload_create
+      description: Uploads candidate PDF resume and target job description. Validates
+        free-tier limits, extracts text, and asynchronously queues Groq AI scoring.
+      summary: Upload Resume & Start ATS Scan
+      tags:
+      - api
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResumeUploadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResumeUploadRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanStatus'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '402':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /health/:
+    get:
+      operationId: health_retrieve
+      description: Returns current operational status of the service.
+      summary: API Health Check
+      tags:
+      - health
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+          description: ''
+components:
+  schemas:
+    AnswerQuestionRequest:
+      type: object
+      properties:
+        answer_text:
+          type: string
+          minLength: 2
+      required:
+      - answer_text
+    AnswerResponse:
+      type: object
+      properties:
+        current_question_order:
+          type: integer
+        feedback:
+          type: string
+        next_question:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        is_completed:
+          type: boolean
+        summary:
+          type: string
+          nullable: true
+      required:
+      - current_question_order
+      - feedback
+      - is_completed
+    AuthTokenResponse:
+      type: object
+      description: Serializer for authentication token response.
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserProfile'
+      required:
+      - access
+      - refresh
+      - user
+    CreateOrderRequest:
+      type: object
+      properties:
+        plan_id:
+          type: integer
+      required:
+      - plan_id
+    CreateOrderResponse:
+      type: object
+      properties:
+        order_id:
+          type: string
+        amount:
+          type: integer
+        currency:
+          type: string
+        key_id:
+          type: string
+        plan_name:
+          type: string
+        subscription_id:
+          type: integer
+      required:
+      - amount
+      - currency
+      - key_id
+      - order_id
+      - plan_name
+      - subscription_id
+    HealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+        service:
+          type: string
+        version:
+          type: string
+      required:
+      - service
+      - status
+      - version
+    InterviewQuestion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        order:
+          type: integer
+          readOnly: true
+          description: Sequential question number in session (1 through 6).
+        question_text:
+          type: string
+          readOnly: true
+          description: Question prompted by the AI interviewer.
+        answer_text:
+          type: string
+          readOnly: true
+          nullable: true
+          description: Candidate's submitted answer.
+        ai_feedback:
+          type: string
+          readOnly: true
+          nullable: true
+          description: Immediate feedback on candidate's answer.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - ai_feedback
+      - answer_text
+      - created_at
+      - id
+      - order
+      - question_text
+    InterviewSession:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        job_role:
+          type: string
+          readOnly: true
+          description: Target role (e.g. Senior Frontend Engineer, Product Manager).
+        resume:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Optional resume providing candidate background context.
+        resume_id:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/InterviewSessionStatusEnum'
+          readOnly: true
+        summary:
+          type: string
+          readOnly: true
+          nullable: true
+          description: Overall assessment, strengths, and areas for improvement upon
+            completion.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterviewQuestion'
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - job_role
+      - questions
+      - resume
+      - resume_id
+      - status
+      - summary
+      - updated_at
+    InterviewSessionStatusEnum:
+      enum:
+      - in_progress
+      - completed
+      type: string
+      description: |-
+        * `in_progress` - In Progress
+        * `completed` - Completed
+    ResumeUploadRequest:
+      type: object
+      description: |-
+        Serializer for uploading resume PDF and job description text.
+        Validates file format (PDF) and size (max 5MB).
+      properties:
+        file:
+          type: string
+          format: binary
+        job_description:
+          type: string
+          minLength: 20
+        title:
+          type: string
+          minLength: 1
+          default: Target Position
+          maxLength: 255
+      required:
+      - file
+      - job_description
+    ScanResult:
+      type: object
+      description: Detailed serializer for complete ATS Scan Result analysis.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA8fEnum'
+          readOnly: true
+        overall_score:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Overall match percentage (0-100).
+        keyword_score:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Keyword relevance score (0-100).
+        formatting_score:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Structure and ATS formatting compliance score (0-100).
+        experience_score:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Experience and skills alignment score (0-100).
+        missing_keywords:
+          readOnly: true
+          description: List of important keywords identified in JD but missing in
+            Resume.
+        suggestions:
+          readOnly: true
+          description: Actionable bullet points for improving the resume.
+        error_message:
+          type: string
+          readOnly: true
+          nullable: true
+          description: Error message if scan processing failed.
+        resume:
+          type: integer
+          readOnly: true
+        job_description:
+          type: integer
+          readOnly: true
+        job_title:
+          type: string
+          description: Role or job title (e.g. Senior Backend Engineer).
+          readOnly: true
+        resume_file_url:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - error_message
+      - experience_score
+      - formatting_score
+      - id
+      - job_description
+      - job_title
+      - keyword_score
+      - missing_keywords
+      - overall_score
+      - resume
+      - resume_file_url
+      - status
+      - suggestions
+    ScanStatus:
+      type: object
+      description: Lightweight status serializer for polling progress.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA8fEnum'
+          readOnly: true
+        overall_score:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Overall match percentage (0-100).
+        error_message:
+          type: string
+          readOnly: true
+          nullable: true
+          description: Error message if scan processing failed.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - error_message
+      - id
+      - overall_score
+      - status
+    StartInterviewRequest:
+      type: object
+      properties:
+        job_role:
+          type: string
+          minLength: 1
+          maxLength: 255
+        resume_id:
+          type: integer
+          nullable: true
+      required:
+      - job_role
+    StatusA8fEnum:
+      enum:
+      - pending
+      - processing
+      - completed
+      - failed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `processing` - Processing
+        * `completed` - Completed
+        * `failed` - Failed
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        plan:
+          type: integer
+          readOnly: true
+        plan_name:
+          type: string
+          description: Plan name (e.g. Pro Monthly, Free Starter).
+          readOnly: true
+        razorpay_order_id:
+          type: string
+          readOnly: true
+          nullable: true
+        razorpay_payment_id:
+          type: string
+          readOnly: true
+          nullable: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/SubscriptionStatusEnum'
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        current_period_end:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - current_period_end
+      - id
+      - plan
+      - plan_name
+      - razorpay_order_id
+      - razorpay_payment_id
+      - started_at
+      - status
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          description: Plan name (e.g. Pro Monthly, Free Starter).
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+          description: Price in standard currency units (e.g. 499.00 INR).
+        currency:
+          type: string
+          readOnly: true
+        scan_limit_per_month:
+          type: integer
+          readOnly: true
+          description: Number of scans allowed per month (-1 indicates unlimited).
+        features:
+          readOnly: true
+          description: List of feature bullet points for this plan.
+        is_active:
+          type: boolean
+          readOnly: true
+      required:
+      - currency
+      - features
+      - id
+      - is_active
+      - name
+      - price
+      - scan_limit_per_month
+    SubscriptionStatusEnum:
+      enum:
+      - created
+      - active
+      - expired
+      - cancelled
+      - failed
+      type: string
+      description: |-
+        * `created` - Created
+        * `active` - Active
+        * `expired` - Expired
+        * `cancelled` - Cancelled
+        * `failed` - Failed
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    UserLoginRequest:
+      type: object
+      description: Serializer for user login request.
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    UserProfile:
+      type: object
+      description: Serializer for user details.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          description: Contact phone number with optional country code.
+          maxLength: 20
+        is_pro:
+          type: boolean
+          readOnly: true
+          description: Flag indicating whether user has active Pro subscription.
+        pro_expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: Expiry timestamp for Pro subscription.
+        has_active_pro:
+          type: boolean
+          readOnly: true
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date_joined
+      - has_active_pro
+      - id
+      - is_pro
+      - pro_expires_at
+      - username
+    UserRegistrationRequest:
+      type: object
+      description: Serializer for user registration with robust password validation.
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: User password meeting complexity requirements.
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          description: Contact phone number with optional country code.
+          maxLength: 20
+      required:
+      - email
+      - password
+      - username
+    VerifyPaymentRequest:
+      type: object
+      properties:
+        razorpay_order_id:
+          type: string
+          minLength: 1
+        razorpay_payment_id:
+          type: string
+          minLength: 1
+        razorpay_signature:
+          type: string
+          minLength: 1
+      required:
+      - razorpay_order_id
+      - razorpay_payment_id
+      - razorpay_signature
+    VerifyPaymentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        subscription:
+          $ref: '#/components/schemas/Subscription'
+      required:
+      - message
+      - subscription
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

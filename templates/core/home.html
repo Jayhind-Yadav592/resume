@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+
+{% block title %}ResumeForge AI — Next-Gen ATS Resume Scanner, Builder & Interview Prep{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Home Page Specific High-Contrast Enhancements */
+  .hero-section {
+    padding-top: 3.5rem;
+    padding-bottom: 4rem;
+  }
+
+  .hero-headline {
+    font-size: 3.25rem;
+    font-weight: 800;
+    color: #0F172A;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+
+  @media (max-width: 991.98px) {
+    .hero-headline {
+      font-size: 2.35rem;
+    }
+  }
+
+  .hero-subtitle {
+    font-size: 1.0625rem;
+    color: #334155;
+    line-height: 1.65;
+    font-weight: 400;
+  }
+
+  .metrics-strip {
+    background: #FFFFFF;
+    border-top: 1px solid #E2E8F0;
+    border-bottom: 1px solid #E2E8F0;
+    padding: 2.25rem 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  }
+
+  .metric-number {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .metric-label {
+    font-size: 0.845rem;
+    font-weight: 600;
+    color: #475569;
+    margin-top: 0.35rem;
+  }
+
+  .section-header-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0F172A;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-header-sub {
+    font-size: 0.95rem;
+    color: #475569;
+    max-width: 580px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .feature-suite-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 1.75rem 1.5rem;
+    height: 100%;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .feature-suite-card:hover {
+    border-color: #4F46E5;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(79, 70, 229, 0.09);
+  }
+
+  .feature-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .comparison-card {
+    border-radius: 14px;
+    padding: 1.75rem;
+    height: 100%;
+    border: 1.5px solid transparent;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section position-relative">
+  <div class="container position-relative" style="z-index: 1;">
+    <div class="row align-items-center g-4 g-lg-5">
+      <!-- Left Column: Headline & Call-to-Actions -->
+      <div class="col-lg-6 text-center text-lg-start">
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill bg-white border border-primary-subtle text-primary small fw-bold mb-3 shadow-xs">
+          <span class="badge bg-primary rounded-pill px-2 py-0.5" style="font-size: 0.72rem;">2026 AI Engine</span>
+          <span style="font-size: 0.8125rem;">Next-Gen ATS Parser & Practice Arena</span>
+        </div>
+
+        <h1 class="hero-headline mb-3">
+          Land 3x More Interviews with <br class="d-none d-lg-block">
+          <span class="gradient-text">AI Resume & Practice Prep</span>
+        </h1>
+
+        <p class="hero-subtitle mb-4 mx-auto mx-lg-0" style="max-width: 540px;">
+          Beat corporate ATS filters in seconds. Get quantified keyword gap analysis, single-column LaTeX resume studio, timed technical MCQs, and speech-enabled AI mock interviews.
+        </p>
+
+        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start mb-4">
+          <a href="/resumes/upload/" class="btn btn-primary-custom btn-lg px-4 py-2.5 shadow-sm">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Scan Resume Free
+          </a>
+          <a href="/practice/mcq/" class="btn btn-outline-custom btn-lg px-4 py-2.5 shadow-xs">
+            <i class="bi bi-code-slash text-success me-1"></i> Practice MCQ & Coding
+          </a>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start gap-3 gap-md-4 text-secondary small pt-2">
+          <div class="d-flex align-items-center gap-1.5 fw-semibold text-dark">
+            <i class="bi bi-check-circle-fill text-success fs-6"></i> Unlimited Free Scans
+          </div>
+          <div class="d-flex align-items-center gap-1.5 fw-semibold text-dark">
+            <i class="bi bi-check-circle-fill text-success fs-6"></i> No Credit Card Required
+          </div>
+          <div class="d-flex align-items-center gap-1.5 fw-semibold text-dark">
+            <i class="bi bi-shield-check text-primary fs-6"></i> 100% Data Private
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive ATS Scorecard Visual Preview -->
+      <div class="col-lg-6">
+        <div class="dashboard-card p-4 p-md-4 shadow-lg position-relative" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px;">
+          <!-- Top Card Header -->
+          <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 fw-bold rounded-pill small">
+                <i class="bi bi-patch-check-fill me-1"></i> ATS Verified
+              </span>
+              <span class="small fw-bold text-dark">Target: Senior Fullstack Engineer</span>
+            </div>
+            <span class="badge bg-light text-muted border font-monospace small" style="font-size: 0.72rem;">Score v2.6</span>
+          </div>
+
+          <!-- Gauges and Progress Bars -->
+          <div class="row align-items-center g-3 mb-3">
+            <div class="col-sm-5 text-center text-sm-start">
+              <div class="score-circle score-circle-lg score-high mx-auto mx-sm-0 shadow-sm">
+                <span class="fs-1 fw-bolder">88%</span>
+                <span class="text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Overall Match</span>
+              </div>
+            </div>
+            <div class="col-sm-7">
+              <div class="mb-2.5">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span class="text-dark">Keyword Density Overlap</span>
+                  <span class="text-primary">92%</span>
+                </div>
+                <div class="progress" style="height: 7px;">
+                  <div class="progress-bar bg-primary" style="width: 92%;"></div>
+                </div>
+              </div>
+              <div class="mb-2.5">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span class="text-dark">LaTeX Structure & Formatting</span>
+                  <span class="text-success">85%</span>
+                </div>
+                <div class="progress" style="height: 7px;">
+                  <div class="progress-bar bg-success" style="width: 85%;"></div>
+                </div>
+              </div>
+              <div class="mb-0">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span class="text-dark">Experience Impact Alignment</span>
+                  <span class="text-info fw-bold">87%</span>
+                </div>
+                <div class="progress" style="height: 7px;">
+                  <div class="progress-bar bg-info" style="width: 87%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Missing Keywords Box -->
+          <div class="p-3 rounded-3 bg-light border">
+            <div class="small fw-bold text-danger mb-2 d-flex align-items-center gap-1.5" style="font-size: 0.8125rem;">
+              <i class="bi bi-exclamation-octagon-fill"></i> Missing High-Priority Job Keywords:
+            </div>
+            <div class="d-flex flex-wrap gap-1.5">
+              <span class="chip-missing">+ Kubernetes</span>
+              <span class="chip-missing">+ Microservices</span>
+              <span class="chip-missing">+ CI/CD Pipelines</span>
+              <span class="chip-missing">+ Redis Cache</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Metrics & Verification Strip -->
+<section class="metrics-strip">
+  <div class="container">
+    <div class="row text-center g-4">
+      <div class="col-6 col-md-3">
+        <div class="metric-number">15,000+</div>
+        <div class="metric-label">Resumes Analyzed</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="metric-number">94%</div>
+        <div class="metric-label">ATS Screening Pass Rate</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="metric-number">3.2x</div>
+        <div class="metric-label">More Interview Callbacks</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="metric-number">&lt; 3 Sec</div>
+        <div class="metric-label">Real-Time Processing Speed</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Core Product Suite Section -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 fw-bold small mb-2">COMPLETE ECOSYSTEM</div>
+      <h2 class="section-header-title">Everything You Need to Get Hired</h2>
+      <p class="section-header-sub">
+        An all-in-one preparation platform combining ATS score audits, single-column LaTeX resume creation, timed technical quizzes, and live AI interviews.
+      </p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Feature 1: ATS Resume Scanner -->
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-suite-card">
+          <div>
+            <div class="feature-icon-wrapper bg-primary-subtle text-primary">
+              <i class="bi bi-file-earmark-check"></i>
+            </div>
+            <h3 class="fs-6 fw-bold text-dark mb-2">ATS Score Scanner</h3>
+            <p class="text-secondary small mb-3" style="line-height: 1.6;">
+              Deep parsing engine calculates match percentage, identifies missing keywords, and validates formatting against target JDs.
+            </p>
+          </div>
+          <a href="/resumes/upload/" class="fw-bold small text-primary text-decoration-none">
+            Scan Resume →
+          </a>
+        </div>
+      </div>
+
+      <!-- Feature 2: LaTeX Resume Studio -->
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-suite-card">
+          <div>
+            <div class="feature-icon-wrapper bg-indigo-subtle text-indigo" style="background: #EEF2FF; color: #4F46E5;">
+              <i class="bi bi-pencil-square"></i>
+            </div>
+            <h3 class="fs-6 fw-bold text-dark mb-2">Resume Studio</h3>
+            <p class="text-secondary small mb-3" style="line-height: 1.6;">
+              Executive single-column LaTeX template builder with AI bullet enhancement, JD auto-tailor, and 1-click A4 PDF export.
+            </p>
+          </div>
+          <a href="/resumes/builder/" class="fw-bold small text-primary text-decoration-none">
+            Open Builder →
+          </a>
+        </div>
+      </div>
+
+      <!-- Feature 3: Technical Practice Suite -->
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-suite-card">
+          <div>
+            <div class="feature-icon-wrapper bg-success-subtle text-success">
+              <i class="bi bi-code-slash"></i>
+            </div>
+            <h3 class="fs-6 fw-bold text-dark mb-2">Practice Arena</h3>
+            <p class="text-secondary small mb-3" style="line-height: 1.6;">
+              Topic-wise timed MCQ quizzes (Python, DSA, SQL, JS) plus live multi-language Coding IDE sandbox with instant test runner.
+            </p>
+          </div>
+          <a href="/practice/mcq/" class="fw-bold small text-success text-decoration-none">
+            Start Practice →
+          </a>
+        </div>
+      </div>
+
+      <!-- Feature 4: AI Mock Interview Room -->
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-suite-card">
+          <div>
+            <div class="feature-icon-wrapper bg-danger-subtle text-danger">
+              <i class="bi bi-camera-video"></i>
+            </div>
+            <h3 class="fs-6 fw-bold text-dark mb-2">Mock Interview</h3>
+            <p class="text-secondary small mb-3" style="line-height: 1.6;">
+              Voice-enabled Google Meet style video room with 6-turn role-tailored technical questions, live transcriptions, and feedback.
+            </p>
+          </div>
+          <a href="/interviews/setup/" class="fw-bold small text-danger text-decoration-none">
+            Launch Room →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- "Before vs After" Resume Transformation Comparison -->
+<section class="py-5" style="background: #F8FAFC; border-top: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="badge bg-success-subtle text-success rounded-pill px-3 py-1 fw-bold small mb-2">MEASURABLE IMPACT</div>
+      <h2 class="section-header-title">The ResumeForge Difference</h2>
+      <p class="section-header-sub">
+        Transform generic, vague bullet points into quantified, high-impact statements that pass corporate automated filters.
+      </p>
+    </div>
+
+    <div class="row g-4 justify-content-center mx-auto" style="max-width: 960px;">
+      <!-- Before Card -->
+      <div class="col-md-6">
+        <div class="comparison-card bg-white shadow-xs border-danger-subtle" style="background: #FEF2F2 !important; border: 1.5px solid #FECACA !important;">
+          <div class="d-flex align-items-center gap-2 mb-2 text-danger fw-bold small">
+            <i class="bi bi-x-circle-fill"></i> BEFORE RESUMEFORGE (Score: 48%)
+          </div>
+          <p class="text-secondary small fst-italic mb-3" style="line-height: 1.6;">
+            "Worked on backend APIs using Python and Django. Fixed bugs in the database and helped the frontend team with endpoints."
+          </p>
+          <div class="small text-danger fw-semibold" style="font-size: 0.8125rem;">
+            <i class="bi bi-dash-circle me-1"></i> No measurable metrics, missing core tech stack keywords, weak action verbs.
+          </div>
+        </div>
+      </div>
+
+      <!-- After Card -->
+      <div class="col-md-6">
+        <div class="comparison-card bg-white shadow-xs border-success-subtle" style="background: #ECFDF5 !important; border: 1.5px solid #A7F3D0 !important;">
+          <div class="d-flex align-items-center gap-2 mb-2 text-success fw-bold small">
+            <i class="bi bi-check-circle-fill"></i> AFTER AI OPTIMIZATION (Score: 92%)
+          </div>
+          <p class="text-dark small fw-medium mb-3" style="line-height: 1.6;">
+            "Architected high-throughput REST APIs using Python, Django REST Framework, and PostgreSQL, reducing latency by 38% across 1M+ daily active requests."
+          </p>
+          <div class="small text-success fw-semibold" style="font-size: 0.8125rem;">
+            <i class="bi bi-check-circle me-1"></i> Action-driven power verbs, quantified business metrics, exact JD keyword alignment.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Plans Section -->
+<section id="pricing" class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 fw-bold small mb-2">TRANSPARENT PRICING</div>
+      <h2 class="section-header-title">Simple Plans for Every Candidate</h2>
+      <p class="section-header-sub">
+        Start free today with unlimited scans. Upgrade to Pro whenever you are actively applying for jobs.
+      </p>
+    </div>
+
+    <div class="row justify-content-center g-4 mx-auto" style="max-width: 880px;">
+      <!-- Free Starter Card -->
+      <div class="col-lg-6 col-md-6">
+        <div class="dashboard-card h-100 p-4 p-md-5 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h3 class="fw-bold text-dark fs-5 mb-0">Free Student</h3>
+              <span class="badge bg-light text-secondary border small">Casual Prep</span>
+            </div>
+            <div class="mb-3">
+              <span class="display-6 fw-extrabold text-dark">₹0</span>
+              <span class="text-secondary small">/ forever</span>
+            </div>
+            <ul class="list-unstyled small space-y-2 mb-4 text-secondary">
+              <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill text-success"></i> <strong>Unlimited</strong> Free ATS Scans</li>
+              <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill text-success"></i> Missing Keyword Breakdown</li>
+              <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill text-success"></i> Full Single-Column LaTeX Builder</li>
+              <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill text-success"></i> Topic-Wise MCQ Practice Quizzes</li>
+              <li class="d-flex align-items-center gap-2 mb-0"><i class="bi bi-check-circle-fill text-success"></i> AI Tailored Cover Letter</li>
+            </ul>
+          </div>
+          <a href="/register/" class="btn btn-outline-custom w-100 py-2.5">
+            Get Started Free
+          </a>
+        </div>
+      </div>
+
+      <!-- Pro Card -->
+      <div class="col-lg-6 col-md-6">
+        <div class="dashboard-card h-100 p-4 p-md-5 d-flex flex-column justify-content-between position-relative shadow-lg" style="border: 2px solid #4F46E5;">
+          <div class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-primary px-3 py-1 rounded-pill text-uppercase fw-bold shadow-sm" style="font-size: 0.72rem;">
+            Recommended
+          </div>
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h3 class="fw-bold text-dark fs-5 mb-0">Pro Plan</h3>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">Offer Fast-Track</span>
+            </div>
+            <div class="mb-3">
+              <span class="display-6 fw-extrabold text-dark">₹499</span>
+              <span class="text-secondary small">/ month</span>
+            </div>
+            <ul class="list-unstyled small space-y-2 mb-4 text-secondary">
+              <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill text-primary"></i> <strong>Unlimited</strong> ATS Scans</li>
+              <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill text-primary"></i> <strong>6-Turn</strong> Live AI Voice Interviews</li>
+              <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill text-primary"></i> Multi-Language Coding Arena Sandbox</li>
+              <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill text-primary"></i> Real-Time Interview Feedback & Critique</li>
+              <li class="d-flex align-items-center gap-2 mb-0"><i class="bi bi-check-circle-fill text-primary"></i> Weekly Pro Career Digest</li>
+            </ul>
+          </div>
+          <a href="/pricing/" class="btn btn-primary-custom w-100 py-2.5 shadow">
+            Upgrade with Razorpay
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

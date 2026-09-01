@@ -1,0 +1,64 @@
+name: ResumeForge CI / CD Quality Gate
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Lint, Test & Coverage
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "setuptools<70"
+          pip install -r requirements.txt
+
+      - name: Validate Django Configuration & Check System
+        env:
+          SECRET_KEY: ci-test-secret-key-for-django-check
+          DATABASE_URL: sqlite:///test_db.sqlite3
+          CELERY_TASK_ALWAYS_EAGER: "True"
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+
+      - name: Run Pytest Suite with Coverage Enforcement (>=70%)
+        env:
+          SECRET_KEY: ci-test-secret-key-for-pytest
+          DATABASE_URL: sqlite:///test_db.sqlite3
+          CELERY_TASK_ALWAYS_EAGER: "True"
+          GROQ_API_KEY: ci_mock_groq_key
+          RAZORPAY_KEY_ID: ci_mock_key
+          RAZORPAY_KEY_SECRET: ci_mock_secret
+        run: |
+          pytest --cov=. --cov-report=term-missing --cov-fail-under=70

@@ -155,6 +155,73 @@
     50% { transform: scale(1.03); }
     100% { transform: scale(1); }
   }
+
+  /* Phone Devices Responsive Optimization (< 768px & < 576px) */
+  @media (max-width: 767.98px) {
+    .mcq-container {
+      padding-top: 0.85rem !important;
+      padding-bottom: 2.5rem !important;
+    }
+
+    .quiz-bottom-nav {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      width: 100% !important;
+      gap: 0.6rem !important;
+      flex-wrap: wrap !important;
+    }
+
+    .quiz-bottom-nav .btn,
+    .quiz-bottom-nav > div {
+      flex: 1 1 auto !important;
+    }
+
+    .quiz-bottom-nav .btn {
+      min-height: 44px !important;
+      font-size: 0.875rem !important;
+      font-weight: 700 !important;
+      justify-content: center !important;
+      display: inline-flex !important;
+      align-items: center !important;
+    }
+
+    .q-nav-pill {
+      width: 28px !important;
+      height: 28px !important;
+      font-size: 0.72rem !important;
+      border-radius: 6px !important;
+    }
+
+    .option-card {
+      padding: 0.85rem !important;
+      gap: 0.65rem !important;
+    }
+
+    .option-letter {
+      width: 28px !important;
+      height: 28px !important;
+      font-size: 0.78rem !important;
+    }
+  }
+
+  @media (max-width: 430px) {
+    .quiz-bottom-nav {
+      flex-direction: row !important;
+      gap: 0.5rem !important;
+    }
+
+    .quiz-bottom-nav button {
+      padding: 0.5rem 0.75rem !important;
+      font-size: 0.82rem !important;
+    }
+
+    .q-nav-pill {
+      width: 26px !important;
+      height: 26px !important;
+      font-size: 0.7rem !important;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -247,7 +314,7 @@
       </div>
 
       <!-- Bottom Quiz Navigation Bar -->
-      <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+      <div class="d-flex justify-content-between align-items-center pt-3 border-top quiz-bottom-nav">
         <button type="button" id="btn-prev" onclick="prevQuestion()" class="btn btn-outline-custom btn-sm px-3.5">
           <i class="bi bi-arrow-left me-1"></i> Previous
         </button>

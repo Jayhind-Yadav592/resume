@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from drf_spectacular.utils import extend_schema
 
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from accounts.serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
@@ -22,6 +24,7 @@ class RegisterView(APIView):
     API endpoint for new user registration.
     """
     permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
     serializer_class = UserRegistrationSerializer
 
     @extend_schema(
@@ -51,6 +54,7 @@ class LoginView(APIView):
     API endpoint for user authentication and token retrieval.
     """
     permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
     serializer_class = UserLoginSerializer
 
     @extend_schema(

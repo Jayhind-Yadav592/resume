@@ -12,6 +12,7 @@ from interviews.views import (
     CodingProblemsListAPIView,
     CodingProblemDetailAPIView,
     CodingRunCodeAPIView,
+    CodingAIAssistantAPIView,
 )
 
 urlpatterns = [
@@ -26,5 +27,6 @@ urlpatterns = [
     path('practice/coding/problems/', CodingProblemsListAPIView.as_view(), name='practice-coding-problems-api'),
     path('practice/coding/problems/<slug:slug>/', CodingProblemDetailAPIView.as_view(), name='practice-coding-detail-api'),
     path('practice/coding/run/', CodingRunCodeAPIView.as_view(), name='practice-coding-run-api'),
+    path('practice/coding/ai-assist/', CodingAIAssistantAPIView.as_view(), name='practice-coding-ai-assist-api'),
 ]
 

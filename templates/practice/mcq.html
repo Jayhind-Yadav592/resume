@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Technical MCQ Practice & Assessments — ResumeForge AI{% endblock %}
+{% block title %}Technical MCQ Practice (15 Questions/Topic) — ResumeForge AI{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -9,34 +9,70 @@
     padding-bottom: 3.5rem;
   }
 
+  /* Modern Glassmorphic Topic Cards */
   .topic-card {
-    background: #FFFFFF;
-    border-radius: 12px;
-    border: 1px solid #E2E8F0;
-    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
+    border-radius: 14px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    padding: 1.35rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     height: 100%;
     position: relative;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
   .topic-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
     border-color: #4F46E5;
-    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.08);
+    box-shadow: 0 12px 28px rgba(79, 70, 229, 0.12);
+    background: #FFFFFF;
   }
 
-  .topic-card.active {
-    border: 2px solid #4F46E5;
-    background: #F8FAFC;
+  /* Question Navigator Pill Bar */
+  .q-nav-pill {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid #CBD5E1;
+    background: #FFFFFF;
+    color: #475569;
+    font-weight: 700;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .q-nav-pill:hover {
+    border-color: #4F46E5;
+    color: #4F46E5;
+  }
+
+  .q-nav-pill.active {
+    border-color: #4F46E5;
+    background: #4F46E5;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+  }
+
+  .q-nav-pill.answered {
+    background: #ECFDF5;
+    border-color: #10B981;
+    color: #047857;
   }
 
   /* Option Select Card */
   .option-card {
     background: #FFFFFF;
     border: 1.5px solid #E2E8F0;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 1rem 1.25rem;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -47,33 +83,25 @@
   }
 
   .option-card:hover {
-    border-color: #CBD5E1;
+    border-color: #94A3B8;
     background-color: #F8FAFC;
+    transform: translateX(3px);
   }
 
   .option-card.selected {
-    border-color: #4F46E5;
-    background-color: #EEF2FF;
-  }
-
-  .option-card.correct-answer {
-    border-color: #10B981 !important;
-    background-color: #ECFDF5 !important;
-  }
-
-  .option-card.wrong-answer {
-    border-color: #EF4444 !important;
-    background-color: #FEF2F2 !important;
+    border-color: #4F46E5 !important;
+    background-color: #EEF2FF !important;
+    box-shadow: 0 2px 10px rgba(79, 70, 229, 0.1);
   }
 
   .option-letter {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     background: #F1F5F9;
     color: #475569;
-    font-weight: 700;
-    font-size: 0.8125rem;
+    font-weight: 800;
+    font-size: 0.85rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -88,29 +116,31 @@
   /* Code Block Styling in MCQs */
   .mcq-code-snippet {
     background: #0F172A;
-    color: #E2E8F0;
+    color: #F8FAFC;
     font-family: 'Fira Code', Consolas, Monaco, monospace;
-    font-size: 0.8125rem;
-    line-height: 1.45;
-    padding: 0.85rem 1.15rem;
-    border-radius: 8px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    padding: 0.95rem 1.25rem;
+    border-radius: 10px;
     margin-top: 0.75rem;
     margin-bottom: 1rem;
     white-space: pre-wrap;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .timer-badge {
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
     border-radius: 30px;
-    padding: 0.4rem 0.9rem;
-    font-weight: 700;
+    padding: 0.45rem 1rem;
+    font-weight: 800;
     font-family: monospace;
     font-size: 0.95rem;
     color: #0F172A;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
   }
 
   .timer-warning {
@@ -134,15 +164,15 @@
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom">
     <div>
       <div class="d-inline-flex align-items-center gap-2 px-2.5 py-0.5 rounded-pill glass-badge small fw-bold mb-1 shadow-xs">
-        <span class="badge bg-primary rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">📝 MCQ Hub</span>
-        <span>Technical Skill Assessments</span>
+        <span class="badge bg-primary rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">📝 15 Questions/Topic</span>
+        <span>Technical MCQ Assessment Arena</span>
       </div>
-      <h1 class="h4 fw-extrabold text-dark mb-0">Topic-Wise Technical MCQ Practice</h1>
+      <h1 class="h4 fw-extrabold text-dark mb-0">Topic-Wise Technical MCQ Assessments</h1>
     </div>
 
     <div class="d-flex align-items-center gap-2">
       <a href="/practice/coding/" class="btn btn-outline-custom btn-sm px-3 shadow-xs">
-        <i class="bi bi-terminal text-success me-1"></i> Switch to Coding Arena
+        <i class="bi bi-terminal text-success me-1"></i> Switch to Live Compiler
       </a>
       <a href="/resumes/dashboard/" class="btn btn-outline-custom btn-sm px-3">
         <i class="bi bi-speedometer2 me-1"></i> Dashboard
@@ -150,11 +180,14 @@
     </div>
   </div>
 
-  <!-- Stage 1: Topic Picker Grid -->
+  <!-- Stage 1: Topic Picker Grid (6 Domain Cards with 15 Questions Each) -->
   <div id="stage-topic-picker" class="mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="h6 fw-bold text-dark mb-0">Select Assessment Domain</h2>
-      <span class="text-muted small">Choose a subject to start timed assessment</span>
+      <div>
+        <h2 class="h6 fw-bold text-dark mb-0">Select Assessment Domain (15 Questions Each)</h2>
+        <div class="text-secondary small">Comprehensive industry-standard multiple-choice assessments with instant explanations.</div>
+      </div>
+      <span class="badge bg-light text-dark border rounded-pill px-3 py-1.5 small font-monospace">6 Topics • 90 Questions</span>
     </div>
 
     <div class="row g-3" id="topics-grid">
@@ -164,32 +197,43 @@
 
   <!-- Stage 2: Active Quiz Stage (Hidden Initially) -->
   <div id="stage-active-quiz" class="d-none">
-    <div class="card-custom p-4 shadow-sm border-0 mb-4">
+    <div class="card-custom p-3 p-md-4 shadow-sm border-0 mb-4">
       <!-- Quiz Top Control Bar -->
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-3 border-bottom">
-        <div class="d-flex align-items-center gap-2">
-          <span class="badge bg-primary-subtle text-primary fw-bold" id="quiz-topic-badge">Python</span>
-          <span class="text-muted small" id="quiz-progress-text">Question 1 of 5</span>
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <span class="badge bg-primary-subtle text-primary fw-bold" id="quiz-topic-badge">Python & Backend</span>
+          <span class="badge bg-light text-secondary border small" id="quiz-progress-text">Question 1 of 15</span>
         </div>
 
         <div class="d-flex align-items-center gap-3">
           <div class="timer-badge" id="quiz-timer">
-            <i class="bi bi-stopwatch text-primary"></i> <span id="timer-text">10:00</span>
+            <i class="bi bi-stopwatch text-primary"></i> <span id="timer-text">15:00</span>
           </div>
           <button type="button" onclick="cancelQuiz()" class="btn btn-outline-custom btn-sm text-secondary">
-            <i class="bi bi-x-circle me-1"></i> Exit Quiz
+            <i class="bi bi-x-circle me-1"></i> Exit Assessment
           </button>
         </div>
       </div>
 
-      <!-- Question Content -->
+      <!-- Question Jump Navigator (1 to 15 Pills) -->
+      <div class="p-2.5 rounded-3 bg-light border mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-1.5">
+          <span class="small fw-bold text-muted text-uppercase" style="font-size: 0.72rem;">Question Navigator (1 to 15):</span>
+          <span class="text-muted small" id="answered-stat-label" style="font-size: 0.72rem;">0/15 Answered</span>
+        </div>
+        <div class="d-flex flex-wrap gap-1.5" id="question-navigator-pills">
+          <!-- 15 Pills generated via JS -->
+        </div>
+      </div>
+
+      <!-- Question Content Area -->
       <div class="mb-4">
         <div class="d-flex align-items-center gap-2 mb-2">
           <span class="badge bg-light text-secondary border small" id="q-difficulty">Medium</span>
-          <span class="badge bg-light text-muted border small" id="q-topic-tag">Backend</span>
+          <span class="badge bg-light text-muted border small" id="q-topic-tag">PYTHON</span>
         </div>
 
-        <h3 class="fs-5 fw-bold text-dark mb-2" id="q-text">Loading question...</h3>
+        <h3 class="fs-5 fw-bold text-dark mb-2" id="q-text" style="line-height: 1.5;">Loading question...</h3>
 
         <!-- Code Snippet Area (if applicable) -->
         <div id="q-code-container" class="d-none">
@@ -204,16 +248,16 @@
 
       <!-- Bottom Quiz Navigation Bar -->
       <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-        <button type="button" id="btn-prev" onclick="prevQuestion()" class="btn btn-outline-custom btn-sm px-3">
+        <button type="button" id="btn-prev" onclick="prevQuestion()" class="btn btn-outline-custom btn-sm px-3.5">
           <i class="bi bi-arrow-left me-1"></i> Previous
         </button>
 
         <div class="d-flex align-items-center gap-2">
-          <button type="button" id="btn-next" onclick="nextQuestion()" class="btn btn-primary-custom btn-sm px-3.5">
+          <button type="button" id="btn-next" onclick="nextQuestion()" class="btn btn-primary-custom btn-sm px-4">
             Next <i class="bi bi-arrow-right ms-1"></i>
           </button>
-          <button type="button" id="btn-finish" onclick="finishQuiz()" class="btn btn-success btn-sm px-4 d-none">
-            <i class="bi bi-check2-circle me-1"></i> Submit Quiz
+          <button type="button" id="btn-finish" onclick="finishQuiz()" class="btn btn-success btn-sm px-4">
+            <i class="bi bi-check2-circle me-1"></i> Submit Assessment
           </button>
         </div>
       </div>
@@ -223,32 +267,32 @@
   <!-- Stage 3: Results Scorecard (Hidden Initially) -->
   <div id="stage-results" class="d-none">
     <div class="card-custom p-4 p-md-5 shadow-sm border-0 text-center mb-4">
-      <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-success-subtle text-success mb-3" style="width: 72px; height: 72px;">
-        <i class="bi bi-trophy-fill fs-2"></i>
+      <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-success-subtle text-success mb-3 shadow-xs" style="width: 76px; height: 76px;">
+        <i class="bi bi-trophy-fill fs-1"></i>
       </div>
       <h2 class="h4 fw-extrabold text-dark mb-1">Assessment Completed!</h2>
-      <p class="text-secondary small mb-4">Here is your verified technical accuracy breakdown and feedback.</p>
+      <p class="text-secondary small mb-4">Here is your verified technical accuracy breakdown and feedback across all 15 questions.</p>
 
       <!-- Score Metrics Strip -->
       <div class="row g-3 justify-content-center mb-4 text-start">
         <div class="col-sm-4">
           <div class="p-3 rounded-3 bg-light border text-center">
-            <div class="text-muted small fw-bold">FINAL SCORE</div>
-            <div class="fs-3 fw-extrabold text-primary" id="res-score">0/0</div>
+            <div class="text-muted small fw-bold" style="font-size: 0.72rem;">FINAL SCORE</div>
+            <div class="fs-2 fw-extrabold text-primary" id="res-score">0/15</div>
             <div class="small text-secondary" id="res-pct">0% Accuracy</div>
           </div>
         </div>
         <div class="col-sm-4">
           <div class="p-3 rounded-3 bg-light border text-center">
-            <div class="text-muted small fw-bold">TIME SPENT</div>
-            <div class="fs-3 fw-extrabold text-dark" id="res-time">0m 0s</div>
-            <div class="small text-secondary">Elapsed time</div>
+            <div class="text-muted small fw-bold" style="font-size: 0.72rem;">TIME ELAPSED</div>
+            <div class="fs-2 fw-extrabold text-dark" id="res-time">0m 0s</div>
+            <div class="small text-secondary">Total duration</div>
           </div>
         </div>
         <div class="col-sm-4">
           <div class="p-3 rounded-3 bg-light border text-center">
-            <div class="text-muted small fw-bold">MASTERY TIER</div>
-            <div class="fs-3 fw-extrabold text-success" id="res-grade">Proficient</div>
+            <div class="text-muted small fw-bold" style="font-size: 0.72rem;">MASTERY STATUS</div>
+            <div class="fs-2 fw-extrabold text-success" id="res-grade">Proficient 🏆</div>
             <div class="small text-secondary">Verified readiness</div>
           </div>
         </div>
@@ -256,10 +300,10 @@
 
       <!-- Action Buttons -->
       <div class="d-flex justify-content-center gap-3">
-        <button type="button" onclick="restartQuiz()" class="btn btn-outline-custom btn-sm px-4">
-          <i class="bi bi-arrow-clockwise me-1"></i> Retake Assessment
+        <button type="button" onclick="restartQuiz()" class="btn btn-outline-custom px-4 py-2">
+          <i class="bi bi-arrow-clockwise me-1"></i> Retake 15 Questions
         </button>
-        <button type="button" onclick="backToTopics()" class="btn btn-primary-custom btn-sm px-4">
+        <button type="button" onclick="backToTopics()" class="btn btn-primary-custom px-4 py-2 shadow-sm">
           <i class="bi bi-grid me-1"></i> Practice Another Topic
         </button>
       </div>
@@ -267,7 +311,9 @@
 
     <!-- Question by Question Review Breakdown -->
     <div class="card-custom p-4 shadow-sm border-0">
-      <h3 class="h6 fw-bold text-dark mb-3 pb-2 border-bottom">Detailed Question Breakdown & Explanations</h3>
+      <h3 class="h6 fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+        <i class="bi bi-journal-check text-primary"></i> Detailed Question Breakdown & Explanations (15 Questions)
+      </h3>
       <div id="breakdown-list" class="d-flex flex-column gap-3"></div>
     </div>
   </div>
@@ -281,7 +327,7 @@
   let currentIndex = 0;
   let userAnswers = {}; // { qIndex: selectedOptionIndex }
   let timerInterval = null;
-  let timeRemaining = 600; // 10 minutes in seconds
+  let timeRemaining = 900; // 15 minutes in seconds
   let totalTimeSpent = 0;
   let activeTopic = null;
 
@@ -311,17 +357,21 @@
       col.className = 'col-md-6 col-lg-4';
       col.innerHTML = `
         <div class="topic-card" onclick="startTopicQuiz('${t.id}')">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <div class="rounded-2 p-2 bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-              <i class="bi ${t.icon} ${t.color} fs-5"></i>
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-2.5">
+              <div class="rounded-3 p-2 bg-light d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px;">
+                <i class="bi ${t.icon} ${t.color} fs-4"></i>
+              </div>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small fw-bold">
+                15 Questions
+              </span>
             </div>
-            <span class="badge ${t.badge_color} small rounded-pill px-2.5 py-1">Practice</span>
+            <h3 class="fs-6 fw-bold text-dark mb-1.5">${t.name}</h3>
+            <p class="text-secondary small mb-3" style="font-size: 0.8125rem; line-height: 1.5; min-height: 42px;">${t.description}</p>
           </div>
-          <h3 class="fs-6 fw-bold text-dark mb-1">${t.name}</h3>
-          <p class="text-secondary small mb-3" style="font-size: 0.8125rem; min-height: 38px;">${t.description}</p>
-          <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-            <span class="text-muted small" style="font-size: 0.75rem;"><i class="bi bi-clock me-1"></i> 10 Mins • Timed</span>
-            <span class="text-primary fw-bold small">Start Assessment →</span>
+          <div class="d-flex justify-content-between align-items-center pt-2.5 border-top">
+            <span class="text-muted small" style="font-size: 0.75rem;"><i class="bi bi-clock me-1 text-primary"></i> 15 Mins • Timed</span>
+            <span class="text-primary fw-bold small">Start 15 Questions →</span>
           </div>
         </div>
       `;
@@ -337,16 +387,9 @@
         const data = await res.json();
         currentQuestions = data.questions || [];
 
-        if (currentQuestions.length === 0) {
-          // fallback to all
-          const fallback = await fetch('/api/v1/practice/mcq/');
-          const fData = await fallback.json();
-          currentQuestions = fData.questions || [];
-        }
-
         currentIndex = 0;
         userAnswers = {};
-        timeRemaining = 600;
+        timeRemaining = 900; // 15 Mins
         totalTimeSpent = 0;
 
         document.getElementById('stage-topic-picker').classList.add('d-none');
@@ -357,11 +400,36 @@
         document.getElementById('quiz-topic-badge').textContent = topicObj ? topicObj.name : 'Technical Assessment';
 
         startTimer();
+        renderNavigatorPills();
         renderQuestion(currentIndex);
       }
     } catch (e) {
       alert('Error loading quiz: ' + e.message);
     }
+  }
+
+  function renderNavigatorPills() {
+    const container = document.getElementById('question-navigator-pills');
+    container.innerHTML = '';
+
+    const answeredCount = Object.keys(userAnswers).length;
+    document.getElementById('answered-stat-label').textContent = `${answeredCount}/${currentQuestions.length} Answered`;
+
+    currentQuestions.forEach((q, idx) => {
+      const pill = document.createElement('button');
+      pill.type = 'button';
+      const isAnswered = userAnswers[idx] !== undefined;
+      const isActive = idx === currentIndex;
+
+      pill.className = `q-nav-pill ${isActive ? 'active' : (isAnswered ? 'answered' : '')}`;
+      pill.textContent = idx + 1;
+      pill.title = `Jump to Question ${idx + 1}`;
+      pill.onclick = () => {
+        currentIndex = idx;
+        renderQuestion(currentIndex);
+      };
+      container.appendChild(pill);
+    });
   }
 
   function startTimer() {
@@ -418,25 +486,18 @@
       const isSelected = userAnswers[idx] === oIdx;
       const card = document.createElement('div');
       card.className = `option-card ${isSelected ? 'selected' : ''}`;
-      card.id = `opt-card-${oIdx}`;
       card.onclick = () => selectOption(idx, oIdx);
 
       card.innerHTML = `
         <div class="option-letter">${letters[oIdx]}</div>
-        <div class="fw-semibold text-dark small pt-0.5">${opt}</div>
+        <div class="fw-semibold text-dark small pt-0.5" style="line-height: 1.5;">${opt}</div>
       `;
       optContainer.appendChild(card);
     });
 
     // Nav controls
     document.getElementById('btn-prev').disabled = (idx === 0);
-    if (idx === currentQuestions.length - 1) {
-      document.getElementById('btn-next').classList.add('d-none');
-      document.getElementById('btn-finish').classList.remove('d-none');
-    } else {
-      document.getElementById('btn-next').classList.remove('d-none');
-      document.getElementById('btn-finish').classList.add('d-none');
-    }
+    renderNavigatorPills();
   }
 
   function selectOption(qIdx, oIdx) {
@@ -459,13 +520,22 @@
   }
 
   function cancelQuiz() {
-    if (confirm('Are you sure you want to exit the quiz?')) {
+    if (confirm('Are you sure you want to exit the assessment? Your current progress will be lost.')) {
       clearInterval(timerInterval);
       backToTopics();
     }
   }
 
   function finishQuiz() {
+    const answeredCount = Object.keys(userAnswers).length;
+    const total = currentQuestions.length;
+
+    if (answeredCount < total) {
+      if (!confirm(`You have answered ${answeredCount} out of ${total} questions. Are you sure you want to submit?`)) {
+        return;
+      }
+    }
+
     clearInterval(timerInterval);
 
     let correctCount = 0;
@@ -486,6 +556,7 @@
             ${isCorrect ? '✓ Correct' : '✗ Incorrect'}
           </span>
         </div>
+        ${q.code_snippet ? `<div class="mcq-code-snippet mb-2 py-2 px-3 small">${q.code_snippet}</div>` : ''}
         <div class="small text-secondary mb-1">
           <strong>Your Answer:</strong> ${selected !== undefined ? q.options[selected] : '<em>Skipped</em>'}
         </div>
@@ -493,13 +564,12 @@
           <strong>Correct Answer:</strong> ${q.options[q.correct_answer]}
         </div>
         <div class="small text-muted p-2 rounded bg-white border">
-          <strong>💡 Insight:</strong> ${q.explanation}
+          <strong>💡 Technical Explanation:</strong> ${q.explanation}
         </div>
       `;
       breakdownList.appendChild(div);
     });
 
-    const total = currentQuestions.length;
     const scorePct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
     const mins = Math.floor(totalTimeSpent / 60);
     const secs = totalTimeSpent % 60;
@@ -511,6 +581,7 @@
 
     document.getElementById('stage-active-quiz').classList.add('d-none');
     document.getElementById('stage-results').classList.remove('d-none');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function restartQuiz() {

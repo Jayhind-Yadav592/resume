@@ -256,7 +256,7 @@
           <button type="button" id="btn-next" onclick="nextQuestion()" class="btn btn-primary-custom btn-sm px-4">
             Next <i class="bi bi-arrow-right ms-1"></i>
           </button>
-          <button type="button" id="btn-finish" onclick="finishQuiz()" class="btn btn-success btn-sm px-4">
+          <button type="button" id="btn-finish" onclick="finishQuiz()" class="btn btn-success btn-sm px-4 d-none">
             <i class="bi bi-check2-circle me-1"></i> Submit Assessment
           </button>
         </div>
@@ -495,8 +495,27 @@
       optContainer.appendChild(card);
     });
 
-    // Nav controls
-    document.getElementById('btn-prev').disabled = (idx === 0);
+    // Nav controls: Show Next on questions 1 to (N-1), and show Submit on the last question
+    const isLastQuestion = (idx === currentQuestions.length - 1);
+    const prevBtn = document.getElementById('btn-prev');
+    const nextBtn = document.getElementById('btn-next');
+    const finishBtn = document.getElementById('btn-finish');
+
+    if (prevBtn) prevBtn.disabled = (idx === 0);
+    if (nextBtn) {
+      if (isLastQuestion) {
+        nextBtn.classList.add('d-none');
+      } else {
+        nextBtn.classList.remove('d-none');
+      }
+    }
+    if (finishBtn) {
+      if (isLastQuestion) {
+        finishBtn.classList.remove('d-none');
+      } else {
+        finishBtn.classList.add('d-none');
+      }
+    }
     renderNavigatorPills();
   }
 

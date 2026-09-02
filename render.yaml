@@ -1,9 +1,9 @@
-﻿services:
+services:
   - type: web
     name: resumeforge-ai
     runtime: python
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn resumeforge.wsgi:application"
+    buildCommand: "sh ./build.sh"
+    startCommand: "gunicorn resumeforge.wsgi:application --workers 3 --threads 2 --worker-class gthread --worker-connections 1000 --timeout 60"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.2

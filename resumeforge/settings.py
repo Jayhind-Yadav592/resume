@@ -144,6 +144,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+WHITENOISE_MAX_AGE = 31536000  # 1 year static asset caching for fast load speeds
+WHITENOISE_MANIFEST_STRICT = False
 
 # Media Files (Uploaded Resumes)
 MEDIA_URL = '/media/'
@@ -163,7 +165,7 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
+    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
 }
 
 # Simple JWT Configuration

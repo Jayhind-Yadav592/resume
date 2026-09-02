@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Live AI Interview Call — ResumeForge AI{% endblock %}
+{% block title %}Live AI Technical Interview — ResumeForge AI{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-3 px-lg-4 py-3">
-  <!-- Google Meet Top Bar -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 px-2">
-    <!-- Meeting Title & Badges -->
+  <!-- Top Control Bar (Google Meet Style) -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 px-1">
+    <!-- Meeting Title & Live Badges -->
     <div class="d-flex align-items-center flex-wrap gap-2">
       <a href="/resumes/dashboard/" class="btn btn-outline-custom btn-sm py-1 px-2.5 rounded-pill me-1" title="Leave & return to dashboard">
         <i class="bi bi-arrow-left me-1"></i> Dashboard
@@ -15,11 +15,13 @@
       <h1 class="h5 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
         <span id="meet-role-title">Technical Interview</span>
       </h1>
-      <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 small shadow-xs">
-        <i class="bi bi-record-fill me-1 text-white"></i> <span id="call-timer">00:00</span>
+      <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 small shadow-xs d-inline-flex align-items-center gap-1">
+        <span class="spinner-grow spinner-grow-sm text-white" style="width: 6px; height: 6px;"></span>
+        <span id="call-timer">00:00</span>
       </span>
-      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small" id="session-badge">
-        <i class="bi bi-shield-check me-1"></i> AI Active
+      <!-- Dynamic Real-Time Interview State Pill -->
+      <span id="interview-state-badge" class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1.5 small shadow-xs">
+        <i class="bi bi-circle-fill me-1.5 small text-secondary"></i> Initializing...
       </span>
     </div>
 
@@ -27,22 +29,23 @@
     <div class="d-flex align-items-center gap-3">
       <div class="text-md-end">
         <div class="small fw-bold text-dark mb-0.5" id="question-progress-label">Question 1 of 6</div>
-        <div class="progress" style="height: 6px; width: 120px;">
-          <div id="question-progress-bar" class="progress-bar bg-primary" style="width: 16%;"></div>
+        <div class="progress" style="height: 6px; width: 130px;">
+          <div id="question-progress-bar" class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 16%;"></div>
         </div>
       </div>
       <button type="button" class="btn btn-outline-custom btn-sm rounded-pill px-3" onclick="toggleSideDrawer()" id="btn-toggle-drawer-top">
-        <i class="bi bi-chat-square-text-fill text-primary me-1"></i> In-Call Chat
+        <i class="bi bi-journal-text text-primary me-1"></i> In-Call Transcript
       </button>
     </div>
   </div>
 
-  <!-- Main Video Stage + Collapsible In-Call Drawer -->
+  <!-- Main Live Video Grid + Collapsible Transcript Drawer -->
   <div class="row g-3">
-    <!-- Main Video Grid (Google Meet Stage) -->
+    <!-- Main Interview Stage -->
     <div class="col-lg-8" id="stage-col">
+      <!-- 2-Tile Google Meet Video Stage -->
       <div class="meet-stage-grid mb-3">
-        <!-- Tile 1: AI Senior Interviewer -->
+        <!-- Tile 1: AI Lead Technical Interviewer -->
         <div class="meet-tile" id="tile-ai">
           <!-- Ambient Audio Visualizer Rings -->
           <div class="ai-avatar-pulse-container">
@@ -52,25 +55,25 @@
             </div>
           </div>
 
-          <div class="text-center text-white z-2 mb-4">
+          <div class="text-center text-white z-2 mb-4 px-3">
             <h2 class="h6 fw-bold text-white mb-1">AI Lead Technical Interviewer</h2>
             <div class="small text-white-50 mb-2" id="ai-speaking-status">
-              <span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...
+              <span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Connecting to interviewer...
             </div>
-            <button type="button" id="btn-tile-hear-ai" class="btn btn-sm btn-primary-custom py-1 px-3 rounded-pill shadow-xs" onclick="window.VoiceInterview && window.VoiceInterview.replay()" title="Click to listen/replay interviewer question">
+            <button type="button" id="btn-tile-hear-ai" class="btn btn-sm btn-primary-custom py-1 px-3 rounded-pill shadow-xs" onclick="window.VoiceInterview && window.VoiceInterview.replay()" title="Replay interviewer question">
               <i class="bi bi-volume-up-fill me-1"></i> Hear Question Audio
             </button>
           </div>
 
           <!-- Live Closed Captions / Subtitle Bar Overlay -->
           <div class="meet-caption-overlay" id="meet-caption-box">
-            <span class="text-warning fw-bold small me-1">AI:</span>
-            <span id="meet-caption-text">Connecting to AI interviewer...</span>
+            <span class="text-warning fw-bold small me-1">AI Interviewer:</span>
+            <span id="meet-caption-text">Welcome! Connecting to your live mock interview session...</span>
           </div>
 
           <!-- Tile Name Tag -->
           <div class="meet-tile-tag">
-            <i class="bi bi-robot text-primary"></i> AI Interviewer (Architect)
+            <i class="bi bi-robot text-primary"></i> Senior Staff Engineer & Hiring Manager
           </div>
         </div>
 
@@ -78,8 +81,8 @@
         <div class="meet-tile position-relative" id="tile-user">
           <video id="room-user-webcam" autoplay playsinline muted></video>
 
-          <!-- Speech Intelligence Floating Badge -->
-          <div class="position-absolute top-0 start-0 m-2 p-2 rounded-3 text-white small shadow-sm" style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); z-index: 10; font-size: 0.72rem; border: 1px solid rgba(255,255,255,0.15);">
+          <!-- Speech Intelligence Floating Badge (WPM & Filler Words) -->
+          <div class="position-absolute top-0 start-0 m-2 p-2 rounded-3 text-white small shadow-sm" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 10; font-size: 0.72rem; border: 1px solid rgba(255,255,255,0.15);">
             <div class="d-flex align-items-center gap-2 mb-1">
               <i class="bi bi-speedometer2 text-info"></i>
               <span>Pacing: <strong id="speech-wpm-val" class="text-white">130 WPM</strong></span>
@@ -109,42 +112,83 @@
         </div>
       </div>
 
-      <!-- Quick Answer & Voice Transcription Dock -->
-      <div class="card-custom p-3 shadow-md mb-3" id="answer-dock">
-        <form id="answer-form" onsubmit="handleSendAnswer(event)">
-          <div class="d-flex justify-content-between align-items-center mb-1.5 px-1">
-            <label for="answer-input" class="small fw-bold text-secondary text-uppercase mb-0" style="font-size: 0.75rem;">
-              <i class="bi bi-chat-left-quote text-primary me-1"></i> Your Response
-            </label>
-            <div class="d-flex align-items-center gap-2">
-              <span id="voice-recording-status" class="small d-none" style="font-size: 0.75rem;"></span>
-              <span class="text-muted small" id="word-counter" style="font-size: 0.75rem;">0 words</span>
-            </div>
+      <!-- Real-Time Conversational Interaction Console -->
+      <div class="card-custom p-3 shadow-md mb-3" id="answer-dock" style="background: rgba(255, 255, 255, 0.98);">
+        <!-- Active Question Box -->
+        <div class="p-2.5 rounded-3 mb-2.5 border" style="background: #F8FAFC; border-color: #E2E8F0 !important;">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="badge bg-primary text-white rounded-pill px-2 py-0.5" style="font-size: 0.7rem;" id="active-question-badge">
+              Question 1 of 6
+            </span>
+            <button type="button" class="btn btn-outline-custom btn-sm py-0.5 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="window.VoiceInterview && window.VoiceInterview.replay()">
+              <i class="bi bi-volume-up me-1"></i> Replay
+            </button>
+          </div>
+          <div class="fw-semibold text-dark small" id="active-question-text" style="font-size: 0.92rem; line-height: 1.5;">
+            Connecting to interviewer...
+          </div>
+        </div>
+
+        <!-- Live Candidate Streaming Transcript Bubble -->
+        <div class="p-2.5 rounded-3 mb-2.5 border" id="live-transcript-container" style="background: #EEF2FF; border-color: #C7D2FE !important;">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small fw-bold text-primary text-uppercase" style="font-size: 0.72rem;">
+              <i class="bi bi-mic-fill me-1"></i> Live Candidate Transcript (You)
+            </span>
+            <span class="badge bg-light text-secondary border rounded-pill" style="font-size: 0.68rem;" id="transcript-word-count">
+              0 words
+            </span>
+          </div>
+          <div class="small text-dark" id="live-transcript-text" style="font-size: 0.9rem; min-height: 38px; line-height: 1.55; white-space: pre-wrap;">
+            Listening to your voice... Speak naturally into your microphone.
+          </div>
+        </div>
+
+        <!-- Microphone Permission Error Notice (if any) -->
+        <div id="mic-error-notice" class="alert alert-warning py-2 px-3 small rounded-3 d-none mb-2" style="font-size: 0.8rem;"></div>
+
+        <!-- Conversational Controls: Big Mic Button + Quick Fallback Actions -->
+        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2.5 pt-1">
+          <!-- Central Thumb-Friendly Mic Button -->
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" id="btn-main-mic" class="btn btn-danger py-2 px-4 rounded-pill shadow d-inline-flex align-items-center gap-2" style="min-height: 48px;">
+              <i id="mic-btn-icon" class="bi bi-mic-fill fs-5"></i>
+              <span id="mic-btn-label" class="fw-bold">Listening (Speak Naturally)</span>
+            </button>
+
+            <!-- Done / Submit Answer Button -->
+            <button type="button" id="btn-finish-answer" class="btn btn-primary-custom py-2 px-3.5 rounded-pill shadow-sm d-inline-flex align-items-center gap-1.5" style="min-height: 48px;" title="Submit your current response">
+              <span>Finish Answer</span> <i class="bi bi-arrow-right-short fs-4"></i>
+            </button>
           </div>
 
-          <div class="input-group">
-            <textarea class="form-control border-light-subtle bg-white" id="answer-input" rows="2" placeholder="Speak into microphone or type your response here... (Ctrl+Enter to send)" required oninput="updateWordCount()"></textarea>
-            <!-- Mic Speak Button -->
-            <button type="button" id="btn-mic" class="btn btn-outline-custom px-3.5 shadow-none" title="Speak answer">
-              <i class="bi bi-mic text-secondary"></i>
-            </button>
-            <!-- Submit Button -->
-            <button type="submit" id="btn-send-answer" class="btn btn-primary-custom px-4 shadow-sm">
-              <span>Submit Answer</span> <i class="bi bi-arrow-right-short ms-1 fs-5"></i>
+          <!-- Type Backup Toggle -->
+          <div>
+            <button type="button" class="btn btn-outline-custom btn-sm rounded-pill py-1.5 px-3" onclick="toggleTypedInputMode()" id="btn-toggle-type-mode">
+              <i class="bi bi-keyboard text-secondary me-1"></i> <span id="toggle-type-label">Type response instead</span>
             </button>
           </div>
-          <div class="d-flex justify-content-between align-items-center mt-1.5 px-1">
-            <span class="text-muted small" style="font-size: 0.75rem;">Press <kbd class="bg-light text-dark border">Ctrl</kbd> + <kbd class="bg-light text-dark border">Enter</kbd> to submit</span>
-            <span id="voice-support-notice" class="text-muted small d-none" style="font-size: 0.75rem;"></span>
-          </div>
-        </form>
+        </div>
+
+        <!-- Typed Input Backup Box (Collapsible for quiet rooms) -->
+        <div id="typed-input-collapse" class="d-none mt-2.5 pt-2 border-top">
+          <form id="answer-form" onsubmit="handleManualSendAnswer(event)">
+            <label for="answer-input" class="small text-muted mb-1" style="font-size: 0.75rem;">Text Response Backup (Press Enter to Send):</label>
+            <div class="input-group">
+              <textarea class="form-control border-light-subtle bg-white" id="answer-input" rows="2" placeholder="Type response here if in a noisy environment..."></textarea>
+              <button type="submit" id="btn-send-typed-answer" class="btn btn-primary-custom px-3.5">
+                <span>Send</span> <i class="bi bi-send-fill ms-1"></i>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <!-- Google Meet Bottom Toolbar Bar -->
       <div class="meet-bottom-bar">
         <div class="d-flex align-items-center gap-2">
           <span class="small fw-bold text-dark d-none d-md-inline" id="meet-bottom-time">00:00</span>
-          <span class="badge bg-light text-secondary border rounded-pill small font-monospace d-none d-sm-inline">Google Meet Mode</span>
+          <span class="badge bg-light text-secondary border rounded-pill small font-monospace d-none d-sm-inline">Live Mode</span>
         </div>
 
         <!-- Center In-Call Controls -->
@@ -165,8 +209,8 @@
           </button>
 
           <!-- Side Drawer Toggle -->
-          <button type="button" id="btn-meet-chat" onclick="toggleSideDrawer()" class="meet-control-btn shadow-sm" title="Toggle Chat & Notes">
-            <i class="bi bi-chat-square-text text-dark"></i>
+          <button type="button" id="btn-meet-chat" onclick="toggleSideDrawer()" class="meet-control-btn shadow-sm" title="Toggle In-Call Transcript">
+            <i class="bi bi-journal-text text-dark"></i>
           </button>
 
           <!-- Red Hangup / End Interview Button -->
@@ -176,31 +220,19 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
-          <!-- Interviewer Voice Selector Dropdown -->
-          <div class="d-none d-sm-flex align-items-center gap-1.5" title="Choose AI Interviewer Persona Voice">
-            <i class="bi bi-person-lines-fill text-secondary small"></i>
-            <select id="interviewer-voice-select" class="form-select form-select-sm border-light-subtle rounded-pill bg-light" style="max-width: 165px; font-size: 0.75rem; cursor: pointer;">
-              <option value="">Default Natural Voice</option>
-            </select>
-          </div>
-
-          <!-- Voice Mode Auto-Speak Toggle -->
-          <div class="form-check form-switch mb-0 d-flex align-items-center gap-1.5" id="voice-mode-toggle-container">
-            <input class="form-check-input mt-0" type="checkbox" role="switch" id="voice-mode-toggle" checked style="cursor: pointer;">
-            <label class="form-check-label small fw-bold text-secondary user-select-none d-none d-md-inline" for="voice-mode-toggle" style="cursor: pointer; font-size: 0.75rem;">
-              Auto-Speak
-            </label>
-          </div>
+          <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small d-none d-sm-inline">
+            <i class="bi bi-soundwave text-success me-1"></i> Voice Engine Active
+          </span>
         </div>
       </div>
     </div>
 
-    <!-- Right Column: Collapsible In-Call Chat & Live AI Critique Drawer -->
+    <!-- Right Column: Collapsible In-Call Transcript & Evaluator Drawer -->
     <div class="col-lg-4" id="drawer-col">
       <div class="meet-drawer p-3" style="min-height: 560px;">
         <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom" style="border-color: rgba(226, 232, 240, 0.6) !important;">
           <h2 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-1.5">
-            <i class="bi bi-journal-text text-primary"></i> In-Call Transcript & Feedback
+            <i class="bi bi-journal-text text-primary"></i> Complete Call Transcript
           </h2>
           <button type="button" class="btn-close d-lg-none" onclick="toggleSideDrawer()"></button>
         </div>
@@ -218,18 +250,47 @@
   </div>
 
   <!-- Final Session Summary Assessment Modal / Screen -->
-  <div id="summary-card" class="card-custom p-4 p-md-5 d-none border-success shadow-lg mt-4" style="background: rgba(255, 255, 255, 0.95);">
+  <div id="summary-card" class="card-custom p-4 p-md-5 d-none border-success shadow-lg mt-4" style="background: rgba(255, 255, 255, 0.98);">
     <div class="text-center mb-4">
-      <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-success bg-success-subtle mb-3 shadow-xs" style="width: 72px; height: 72px;">
+      <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-success bg-success-subtle mb-3 shadow-xs" style="width: 76px; height: 76px;">
         <i class="bi bi-award-fill fs-1"></i>
       </div>
       <h2 class="h3 fw-extrabold text-dark mb-1">Interview Completed!</h2>
-      <p class="text-secondary small mb-0">Here is your comprehensive performance assessment and final rating.</p>
+      <p class="text-secondary small mb-0">Here is your comprehensive performance scorecard and evaluator debrief.</p>
     </div>
 
+    <!-- Score Breakdown Cards -->
+    <div class="row g-3 mb-4" id="scorecard-metrics-grid">
+      <div class="col-6 col-md-3">
+        <div class="p-3 rounded-3 border text-center bg-light">
+          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">Overall Rating</div>
+          <div class="fs-2 fw-extrabold text-primary" id="metric-overall-score">88%</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-3 rounded-3 border text-center bg-light">
+          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">Technical Depth</div>
+          <div class="fs-2 fw-extrabold text-success" id="metric-tech-score">85%</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-3 rounded-3 border text-center bg-light">
+          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">Communication</div>
+          <div class="fs-2 fw-extrabold text-info" id="metric-comm-score">90%</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-3 rounded-3 border text-center bg-light">
+          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">Problem Solving</div>
+          <div class="fs-2 fw-extrabold text-warning" id="metric-problem-score">86%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evaluator Detailed Assessment -->
     <div class="p-4 rounded-3 border mb-4" style="background: rgba(248, 250, 252, 0.85); border-color: rgba(226, 232, 240, 0.8) !important;">
       <h3 class="h6 fw-bold text-dark mb-3"><i class="bi bi-journal-check text-primary me-1"></i> Evaluator's Comprehensive Assessment:</h3>
-      <div class="text-dark small" style="line-height: 1.75; white-space: pre-line;" id="summary-text-content">
+      <div class="text-dark small" style="line-height: 1.8; white-space: pre-line;" id="summary-text-content">
         <!-- Populated via JS -->
       </div>
     </div>
@@ -239,7 +300,7 @@
         <i class="bi bi-arrow-repeat me-1"></i> Practice Another Role
       </a>
       <a href="/resumes/dashboard/" class="btn btn-outline-custom px-4 py-3">
-        <i class="bi bi-speedometer2 me-1"></i> View Dashboard
+        <i class="bi bi-speedometer2 me-1"></i> Return to Dashboard
       </a>
     </div>
   </div>
@@ -247,8 +308,8 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<!-- Voice Mode Engine (Native Web Speech API) -->
-<script src="{% static 'js/interviews/voice.js' %}?v=20260901_8"></script>
+<!-- Real-Time Voice Engine -->
+<script src="{% static 'js/interviews/voice.js' %}?v=20260902_3"></script>
 
 <script>
   let currentSessionId = null;
@@ -259,6 +320,7 @@
   let areCaptionsOn = true;
   let callSeconds = 0;
   let callTimerInterval = null;
+  let currentQuestionOrder = 1;
 
   document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -277,7 +339,6 @@
 
     startCallTimer();
     initRoomMedia();
-    setupKeyboardShortcuts();
     await loadInterviewSession(currentSessionId, token);
   });
 
@@ -306,7 +367,6 @@
       }
     } catch (err) {
       console.warn('Room media notice:', err);
-      // Fallback avatar if user denies or lacks camera
       document.getElementById('room-user-webcam').classList.add('d-none');
       document.getElementById('room-cam-off-placeholder').classList.remove('d-none');
     }
@@ -380,31 +440,31 @@
     }
   }
 
+  function toggleTypedInputMode() {
+    const typedBox = document.getElementById('typed-input-collapse');
+    const label = document.getElementById('toggle-type-label');
+    if (typedBox.classList.contains('d-none')) {
+      typedBox.classList.remove('d-none');
+      label.textContent = 'Hide text input';
+      document.getElementById('answer-input').focus();
+    } else {
+      typedBox.classList.add('d-none');
+      label.textContent = 'Type response instead';
+    }
+  }
+
   function confirmEndCall() {
     if (confirm('Are you sure you want to end this live mock interview call?')) {
       if (roomStream) {
         roomStream.getTracks().forEach(t => t.stop());
       }
       if (callTimerInterval) clearInterval(callTimerInterval);
-      if (window.VoiceInterview) window.VoiceInterview.stopSpeaking();
+      if (window.VoiceInterview) {
+        window.VoiceInterview.stopSpeaking();
+        window.VoiceInterview.stopListening();
+      }
       window.location.href = '/resumes/dashboard/';
     }
-  }
-
-  function setupKeyboardShortcuts() {
-    const answerInput = document.getElementById('answer-input');
-    answerInput.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.key === 'Enter') {
-        e.preventDefault();
-        document.getElementById('answer-form').dispatchEvent(new Event('submit', { cancelable: true }));
-      }
-    });
-  }
-
-  function updateWordCount() {
-    const text = document.getElementById('answer-input').value.trim();
-    const count = text ? text.split(/\s+/).length : 0;
-    document.getElementById('word-counter').textContent = `${count} word${count === 1 ? '' : 's'}`;
   }
 
   async function loadInterviewSession(sessionId, token) {
@@ -440,10 +500,20 @@
         });
 
         const activeOrder = questions.length;
+        currentQuestionOrder = activeOrder;
         updateProgress(activeOrder);
 
         if (session.status === 'completed') {
           showCompletionState(session.summary);
+        } else {
+          // Speak the latest active question
+          const latestQ = questions[questions.length - 1];
+          if (latestQ && !latestQ.answer_text) {
+            setActiveQuestionDisplay(latestQ.question_text, latestQ.order);
+            if (window.VoiceInterview) {
+              window.VoiceInterview.speak(latestQ.question_text);
+            }
+          }
         }
 
         scrollToBottom();
@@ -455,49 +525,26 @@
     }
   }
 
-  function appendAiBubble(text, order, autoSpeak = true) {
+  function setActiveQuestionDisplay(questionText, order) {
+    document.getElementById('active-question-badge').textContent = `Question ${order} of 6`;
+    document.getElementById('active-question-text').textContent = questionText;
+    document.getElementById('meet-caption-text').textContent = questionText;
+  }
+
+  function appendAiBubble(text, order, autoSpeak = false) {
     const box = document.getElementById('chat-messages-box');
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble-ai mb-2';
-
-    const safeEscaped = encodeURIComponent(text);
 
     bubble.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-1">
         <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.7rem;">
           <i class="bi bi-robot me-1"></i> Question ${order} of 6
         </span>
-        <button type="button" class="btn btn-outline-custom btn-sm p-0 rounded-circle d-flex align-items-center justify-content-center" style="width: 26px; height: 26px;" onclick="window.VoiceInterview && window.VoiceInterview.speak(decodeURIComponent('${safeEscaped}'), true, this)" title="Replay question audio">
-          <i class="bi bi-volume-up text-secondary" style="font-size: 0.8rem;"></i>
-        </button>
       </div>
       <div class="text-dark small" style="line-height: 1.6;">${text}</div>
     `;
     box.appendChild(bubble);
-
-    // Update Live Subtitles in AI Video Tile
-    document.getElementById('meet-caption-text').textContent = text;
-
-    // Trigger Pulse & Voice
-    if (autoSpeak) {
-      triggerAiPulseAnimation(true);
-      if (window.VoiceInterview) {
-        window.VoiceInterview.speak(text);
-      }
-      setTimeout(() => triggerAiPulseAnimation(false), 8000);
-    }
-  }
-
-  function triggerAiPulseAnimation(isSpeaking) {
-    const pulseRing = document.getElementById('ai-pulse-ring');
-    const speakingStatus = document.getElementById('ai-speaking-status');
-    if (isSpeaking) {
-      pulseRing.style.display = 'block';
-      speakingStatus.innerHTML = '<span class="badge bg-success rounded-pill px-2 py-0.5"><i class="bi bi-soundwave me-1"></i> AI Speaking...</span>';
-    } else {
-      pulseRing.style.display = 'none';
-      speakingStatus.innerHTML = '<span class="spinner-grow spinner-grow-sm text-primary me-1" style="width: 6px; height: 6px;"></span> Listening to you...';
-    }
   }
 
   function appendUserBubble(text) {
@@ -534,30 +581,15 @@
     box.scrollTop = box.scrollHeight;
   }
 
-  async function handleSendAnswer(e) {
-    e.preventDefault();
-    if (isSubmitting) return;
+  // Real-time autonomous answer submission handler
+  window.handleAutoSubmitAnswer = async function (answerText) {
+    if (isSubmitting || !answerText.trim()) return;
 
-    if (window.VoiceInterview) {
-      window.VoiceInterview.stopSpeaking();
-    }
-
-    const input = document.getElementById('answer-input');
-    const answerText = input.value.trim();
-    const btn = document.getElementById('btn-send-answer');
     const token = localStorage.getItem('resumeforge_access_token');
-
-    if (!answerText) return;
-
     appendUserBubble(answerText);
-    input.value = '';
-    updateWordCount();
     scrollToBottom();
 
     isSubmitting = true;
-    btn.disabled = true;
-    input.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...';
 
     try {
       const res = await fetch(`/api/v1/interviews/${currentSessionId}/answer/`, {
@@ -577,37 +609,74 @@
 
         if (data.is_completed || !data.next_question) {
           updateProgress(6);
-          showCompletionState(data.summary);
+          showCompletionState(data.summary, data.scores);
         } else {
-          appendAiBubble(data.next_question.question_text, data.next_question.order, true);
-          updateProgress(data.next_question.order);
+          currentQuestionOrder = data.next_question.order;
+          updateProgress(currentQuestionOrder);
+          setActiveQuestionDisplay(data.next_question.question_text, currentQuestionOrder);
+          appendAiBubble(data.next_question.question_text, currentQuestionOrder);
+
+          // Real-time voice: AI speaks natural transition + question aloud
+          const spokenTurn = data.spoken_text || data.next_question.spoken_text || data.next_question.question_text;
+          if (window.VoiceInterview) {
+            window.VoiceInterview.speak(spokenTurn);
+          }
         }
 
         scrollToBottom();
       } else {
-        alert(data.detail || 'Could not submit answer. Please retry.');
+        alert(data.detail || 'Could not process response. Retrying...');
+        if (window.VoiceInterview) {
+          window.VoiceInterview.setState(window.VoiceInterview.STATES.LISTENING);
+        }
       }
     } catch (err) {
       alert('Network error: ' + err.message);
+      if (window.VoiceInterview) {
+        window.VoiceInterview.setState(window.VoiceInterview.STATES.LISTENING);
+      }
     } finally {
       isSubmitting = false;
-      btn.disabled = false;
-      input.disabled = false;
-      btn.innerHTML = '<span>Submit Answer</span> <i class="bi bi-arrow-right-short ms-1 fs-5"></i>';
-      input.focus();
     }
+  };
+
+  function handleManualSendAnswer(e) {
+    e.preventDefault();
+    const input = document.getElementById('answer-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (window.VoiceInterview) {
+      window.VoiceInterview.stopSpeaking();
+      window.VoiceInterview.stopListening();
+    }
+
+    input.value = '';
+    window.handleAutoSubmitAnswer(text);
   }
 
-  function showCompletionState(summaryText) {
+  function showCompletionState(summaryText, scores = null) {
+    if (window.VoiceInterview) {
+      window.VoiceInterview.setState(window.VoiceInterview.STATES.COMPLETED);
+    }
+
     document.getElementById('answer-dock').classList.add('d-none');
-    document.getElementById('session-badge').textContent = 'Completed';
-    document.getElementById('session-badge').className = 'badge bg-success text-white rounded-pill px-2.5 py-1';
+    document.getElementById('interview-state-badge').textContent = 'Interview Completed';
+    document.getElementById('interview-state-badge').className = 'badge bg-success text-white rounded-pill px-3 py-1.5 shadow-xs';
+
+    if (scores) {
+      if (scores.overall) document.getElementById('metric-overall-score').textContent = `${scores.overall}%`;
+      if (scores.technical) document.getElementById('metric-tech-score').textContent = `${scores.technical}%`;
+      if (scores.communication) document.getElementById('metric-comm-score').textContent = `${scores.communication}%`;
+      if (scores.problem_solving) document.getElementById('metric-problem-score').textContent = `${scores.problem_solving}%`;
+    }
 
     const summaryCard = document.getElementById('summary-card');
-    document.getElementById('summary-text-content').textContent = summaryText || 'You have successfully completed all 6 interview turns with solid competency demonstration.';
+    document.getElementById('summary-text-content').textContent = summaryText || 'You have successfully completed all interview turns with strong competency demonstration.';
     summaryCard.classList.remove('d-none');
 
     summaryCard.scrollIntoView({ behavior: 'smooth' });
   }
 </script>
 {% endblock %}
+

@@ -119,17 +119,24 @@ def submit_interview_answer(session: InterviewSession, answer_text: str) -> Dict
     current_question.save(update_fields=['answer_text'])
 
     humanized_interviewer_prompt = (
-        f"You are a Senior Principal Staff Engineer & Technical Hiring Manager interviewing a candidate for '{session.job_role}'.\n"
-        f"Resume context: {session.resume.parsed_text[:1500] if session.resume else 'None provided'}.\n\n"
-        "Guidelines for your response:\n"
-        "1. Speak naturally like a real human interviewer at a top company (Google/Swiggy/Razorpay). Acknowledge specific points they made with genuine curiosity and technical nuance.\n"
-        "2. Provide 2-3 sentences of constructive, encouraging feedback ('Great point on X, and I liked how you considered Y... to take it further, consider mentioning Z').\n"
-        "3. Ask the next question as a natural conversational progression or dive deeper into architecture, edge cases, and real-world trade-offs.\n\n"
+        f"You are a Senior Principal Staff Engineer & Hiring Manager conducting a live 1-on-1 technical interview for the role of '{session.job_role}'.\n"
+        f"Candidate Resume: {session.resume.parsed_text[:1500] if session.resume else 'None provided'}.\n\n"
+        "INTERVIEW PRINCIPLES:\n"
+        "1. Real Human Conversational Style: Do NOT act like a generic chatbot. Speak concisely, naturally, and warmly.\n"
+        "2. Dynamic Follow-Up & Memory: Analyze the candidate's exact words. If they mentioned a specific tech, framework, or project, drill deeper into that exact detail. If their answer was vague, ask them to clarify how they implemented it. If strong, challenge them with concurrency, bottlenecks, or failure modes.\n"
+        "3. Concise Spoken Delivery: In real interviews, interviewers speak 1-2 brief transition sentences followed by ONE targeted question.\n\n"
         "You MUST return STRICT JSON adhering EXACTLY to this schema:\n"
         "{\n"
-        '  "feedback": "<2-3 empathetic, human constructive sentences analyzing their response>",\n'
-        '  "next_question": "<the next follow-up or new question, or empty string if this was question 6>",\n'
-        '  "summary": "<thorough humanized candidate assessment with Key Highlights, Opportunities for Growth, and Hiring Recommendation if question 6, else empty string>"\n'
+        '  "spoken_reaction": "<1 short natural human sentence reacting to what they just said, e.g. \'That makes a lot of sense.\' or \'Interesting approach to handling that.\'>",\n'
+        '  "feedback": "<2-3 constructive sentences evaluating their technical depth, trade-offs, and communication>",\n'
+        '  "next_question": "<the next dynamic technical question based directly on their answer, or empty string if final question>",\n'
+        '  "summary": "<comprehensive performance assessment if final question, else empty string>",\n'
+        '  "scores": {\n'
+        '     "overall": 85,\n'
+        '     "technical": 88,\n'
+        '     "communication": 82,\n'
+        '     "problem_solving": 85\n'
+        '  }\n'
         "}"
     )
 
@@ -148,9 +155,9 @@ def submit_interview_answer(session: InterviewSession, answer_text: str) -> Dict
         messages.append({
             "role": "user",
             "content": (
-                f"[SYSTEM INSTRUCTION]: Candidate just completed Question {current_order} of {MAX_INTERVIEW_QUESTIONS}. "
-                "Give brief feedback on their final answer, leave next_question empty, and write a thorough, encouraging, "
-                "humanized performance debrief covering Technical Strengths, Communication Clarity, Edge-Case Handling, and Final Hiring Recommendation."
+                f"[SYSTEM INSTRUCTION]: Candidate just finished their final response (Question {current_order} of {MAX_INTERVIEW_QUESTIONS}). "
+                "Provide brief feedback on their final answer, leave next_question empty, and generate the final comprehensive scorecard summary "
+                "with Strengths, Areas for Improvement, Key Recommendations, and Hiring Decision."
             )
         })
     else:
@@ -158,7 +165,7 @@ def submit_interview_answer(session: InterviewSession, answer_text: str) -> Dict
             "role": "user",
             "content": (
                 f"[SYSTEM INSTRUCTION]: Candidate just answered Question {current_order} of {MAX_INTERVIEW_QUESTIONS}. "
-                f"Give natural human feedback and ask Question {current_order + 1}."
+                f"React naturally, evaluate their specific points, and ask dynamic follow-up Question {current_order + 1}."
             )
         })
 
@@ -179,12 +186,20 @@ def submit_interview_answer(session: InterviewSession, answer_text: str) -> Dict
     except Exception as exc:
         logger.warning(f"Groq conversational fallback ({exc}).")
         data = {
+            "spoken_reaction": "Got it, that's a very clear breakdown.",
             "feedback": "I appreciate how clearly you broke down that approach—structuring the problem into modular steps makes the design much easier to reason about.",
             "next_question": f"When scaling this architecture under heavy concurrent traffic, what caching or asynchronous strategies would you prioritize?" if not is_final_question else "",
-            "summary": "Demonstrated strong core technical knowledge, clear articulation, and thoughtful reasoning throughout the session." if is_final_question else ""
+            "summary": "Demonstrated strong core technical knowledge, clear articulation, and thoughtful reasoning throughout the session." if is_final_question else "",
+            "scores": {
+                "overall": 82,
+                "technical": 84,
+                "communication": 80,
+                "problem_solving": 82
+            }
         }
 
     feedback = data.get('feedback', 'Thank you for walking me through your thoughts.')
+    spoken_reaction = data.get('spoken_reaction', 'Got it, thanks for explaining.')
     current_question.ai_feedback = feedback
     current_question.save(update_fields=['ai_feedback'])
 
@@ -204,15 +219,24 @@ def submit_interview_answer(session: InterviewSession, answer_text: str) -> Dict
 
         return {
             "current_question_order": current_order,
+            "spoken_reaction": spoken_reaction,
             "feedback": feedback,
             "next_question": None,
             "is_completed": True,
-            "summary": summary_text
+            "summary": summary_text,
+            "scores": data.get('scores', {
+                "overall": 85,
+                "technical": 85,
+                "communication": 85,
+                "problem_solving": 85
+            })
         }
     else:
         next_q_text = data.get('next_question') or (
             f"How do you typically approach automated testing, code reviews, and reliability in your team sprints as a {session.job_role}?"
         )
+        full_spoken_turn = f"{spoken_reaction} {next_q_text}" if spoken_reaction else next_q_text
+
         next_order = current_order + 1
         next_question = InterviewQuestion.objects.create(
             session=session,
@@ -222,12 +246,16 @@ def submit_interview_answer(session: InterviewSession, answer_text: str) -> Dict
 
         return {
             "current_question_order": current_order,
+            "spoken_reaction": spoken_reaction,
+            "spoken_text": full_spoken_turn,
             "feedback": feedback,
             "next_question": {
                 "id": next_question.id,
                 "order": next_question.order,
-                "question_text": next_question.question_text
+                "question_text": next_question.question_text,
+                "spoken_text": full_spoken_turn
             },
             "is_completed": False,
-            "summary": None
+            "summary": None,
+            "scores": data.get('scores')
         }

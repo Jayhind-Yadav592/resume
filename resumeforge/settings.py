@@ -7,6 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 import environ
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,7 +17,7 @@ env = environ.Env(
     DEBUG=(bool, True),
     SECRET_KEY=(str, 'django-insecure-default-change-me-in-production-2026'),
     ALLOWED_HOSTS=(list, ['*']),
-    CELERY_TASK_ALWAYS_EAGER=(bool, False),
+    CELERY_TASK_ALWAYS_EAGER=(bool, True),
 )
 
 # Read .env file if present
@@ -26,7 +27,21 @@ if env_file.exists():
 
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
+
+# Render Deployment & Allowed Hosts Configuration
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# CSRF Trusted Origins (Render & Localhost)
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://*.render.com',
+])
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 
 # Application definition
 INSTALLED_APPS = [
@@ -86,12 +101,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'resumeforge.wsgi.application'
 ASGI_APPLICATION = 'resumeforge.asgi.application'
 
-# Database Configuration
-# Supports DATABASE_URL (e.g. postgres://user:pass@host:5432/dbname) with SQLite fallback
+# Database Configuration (Neon Serverless PostgreSQL & SQLite fallback)
+RAW_DATABASE_URL = env('DATABASE_URL', default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
 DATABASES = {
-    'default': env.db(
-        'DATABASE_URL',
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+    'default': dj_database_url.config(
+        default=RAW_DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+        ssl_require=bool(RAW_DATABASE_URL.startswith(('postgres://', 'postgresql://'))),
     )
 }
 
@@ -195,7 +212,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
-CELERY_TASK_ALWAYS_EAGER = env.bool('CELERY_TASK_ALWAYS_EAGER', default=False)
+CELERY_TASK_ALWAYS_EAGER = env.bool('CELERY_TASK_ALWAYS_EAGER', default=True)
 CELERY_TASK_EAGER_PROPAGATES = True
 
 # Groq AI API Configuration

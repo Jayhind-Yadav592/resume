@@ -10,6 +10,7 @@ groq>=0.9.0
 pdfplumber>=0.11.0
 razorpay>=1.4.1
 psycopg2-binary>=2.9.9
+dj-database-url>=2.1.0
 gunicorn>=21.2.0
 pytest>=8.0.0
 pytest-django>=4.8.0

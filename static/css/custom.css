@@ -937,7 +937,8 @@ img, video, canvas, svg {
     width: 100% !important;
   }
 
-  .studio-toolbar .btn {
+  .studio-toolbar .btn,
+  .studio-toolbar .btn-group {
     width: 100% !important;
   }
 
@@ -946,13 +947,15 @@ img, video, canvas, svg {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     border-radius: 10px !important;
+    min-height: auto !important;
   }
 
   #resume-document-preview {
-    padding: 16px 14px !important;
+    padding: 18px 14px !important;
     min-height: auto !important;
     width: 100% !important;
-    min-width: 300px !important;
+    min-width: 280px !important;
+    max-width: 100% !important;
   }
 
   .resume-name {
@@ -965,21 +968,83 @@ img, video, canvas, svg {
     gap: 3px 6px !important;
   }
 
-  /* 8. Practice Suite (MCQ & Coding) Mobile View */
-  .mcq-option-card {
+  .entry-box {
+    padding: 0.65rem !important;
+  }
+
+  /* 8. Practice Suite (MCQ & Coding Platform) Mobile Rules */
+  .compiler-topbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.6rem !important;
+    padding: 0.75rem 0.65rem !important;
+  }
+
+  .compiler-topbar > div {
+    justify-content: space-between !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+
+  .ide-workspace {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    min-height: auto !important;
+  }
+
+  .editor-body-wrapper {
+    min-height: 280px !important;
+  }
+
+  .output-content-area {
+    min-height: 280px !important;
     padding: 0.75rem !important;
-    font-size: 0.875rem !important;
   }
 
-  .problem-panel,
-  .editor-ide-panel {
-    height: auto !important;
-    min-height: 320px !important;
+  .output-tab-bar {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: wrap !important;
+    gap: 0.25rem !important;
+    padding: 0.35rem 0.5rem !important;
   }
 
-  .ide-textarea {
-    min-height: 240px !important;
-    font-size: 13px !important;
+  .output-tab-btn {
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .btn-run-compiler,
+  .btn-ai-compiler {
+    padding: 0.45rem 0.85rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .topic-card {
+    padding: 1rem 0.85rem !important;
+  }
+
+  .mcq-option-card,
+  .option-card {
+    padding: 0.75rem 0.85rem !important;
+    font-size: 0.84rem !important;
+  }
+
+  .q-nav-pill {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.72rem !important;
+    border-radius: 6px !important;
+  }
+
+  .timer-badge {
+    font-size: 0.82rem !important;
+    padding: 0.35rem 0.75rem !important;
+  }
+
+  .mcq-code-snippet {
+    padding: 0.65rem 0.85rem !important;
+    font-size: 0.78rem !important;
   }
 
   /* 9. Video / AI Mock Interview Google Meet Room */
@@ -989,8 +1054,8 @@ img, video, canvas, svg {
   }
 
   .meet-tile {
-    min-height: 220px !important;
-    height: 240px !important;
+    min-height: 200px !important;
+    height: 220px !important;
     border-radius: 12px !important;
   }
 
@@ -1020,7 +1085,40 @@ img, video, canvas, svg {
     padding: 0.75rem !important;
   }
 
-  /* 10. Tables, Pre, Code Horizontal Scroll Protection */
+  #btn-main-mic,
+  #btn-finish-answer {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .meet-caption-overlay {
+    bottom: 10px !important;
+    left: 8px !important;
+    right: 8px !important;
+    font-size: 0.75rem !important;
+    padding: 6px 10px !important;
+  }
+
+  /* 10. ATS Report & Generated Outputs Mobile Fixes */
+  #cover-letter-section .card-custom,
+  #bullet-rewrites-container,
+  #missing-keywords-grid,
+  #job-search-links-grid {
+    width: 100% !important;
+  }
+
+  #letter-body-text {
+    font-size: 0.875rem !important;
+    line-height: 1.6 !important;
+  }
+
+  .chart-responsive-container {
+    height: 240px !important;
+    min-height: 220px !important;
+    width: 100% !important;
+  }
+
+  /* 11. Tables, Pre, Code Horizontal Scroll Protection */
   .table-responsive {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
@@ -1028,7 +1126,7 @@ img, video, canvas, svg {
   }
 
   table {
-    min-width: 500px !important;
+    min-width: 480px !important;
   }
 
   pre, code {
@@ -1037,7 +1135,7 @@ img, video, canvas, svg {
     max-width: 100% !important;
   }
 
-  /* 11. Footer Mobile Stacking */
+  /* 12. Footer Mobile Stacking */
   footer {
     padding-top: 2rem !important;
     padding-bottom: 2rem !important;
@@ -1053,27 +1151,42 @@ img, video, canvas, svg {
 /* Specific Extra Compact Breakpoint for 320px – 375px (iPhone SE, Galaxy Fold, Small Devices) */
 @media (max-width: 375px) {
   .navbar-brand span {
-    font-size: 0.95rem !important;
+    font-size: 0.92rem !important;
   }
 
   .navbar-brand div {
-    width: 30px !important;
-    height: 30px !important;
+    width: 28px !important;
+    height: 28px !important;
   }
 
   .btn {
-    font-size: 0.8125rem !important;
-    padding: 0.45rem 0.65rem !important;
+    font-size: 0.78rem !important;
+    padding: 0.4rem 0.6rem !important;
   }
 
   .hero-headline {
-    font-size: 1.35rem !important;
+    font-size: 1.3rem !important;
   }
 
   .card-custom,
   .dashboard-card,
   .glass-card {
-    padding: 0.75rem !important;
+    padding: 0.65rem !important;
+  }
+
+  .q-nav-pill {
+    width: 25px !important;
+    height: 25px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .score-circle-lg {
+    width: 76px !important;
+    height: 76px !important;
+  }
+
+  .score-circle-lg span.fs-1 {
+    font-size: 1.25rem !important;
   }
 }
 

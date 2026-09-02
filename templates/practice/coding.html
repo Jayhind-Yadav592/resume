@@ -407,12 +407,68 @@
     background: #F8FAFC !important;
   }
 
-  .compiler-wrapper.theme-light #problemListModal .list-group-item .fw-bold {
-    color: #0F172A !important;
-  }
-
   .compiler-wrapper.theme-light #problemListModal .btn-close-white {
     filter: none !important;
+  }
+
+  /* Mobile Media Queries (< 768px and < 430px) */
+  @media (max-width: 767.98px) {
+    .compiler-topbar {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 0.65rem !important;
+      padding: 0.65rem 0.75rem !important;
+    }
+
+    .compiler-topbar > div {
+      justify-content: space-between !important;
+      width: 100% !important;
+      flex-wrap: wrap !important;
+    }
+
+    .ide-workspace {
+      grid-template-columns: 1fr !important;
+      gap: 0.75rem !important;
+      min-height: auto !important;
+    }
+
+    .editor-body-wrapper {
+      min-height: 300px !important;
+    }
+
+    .output-content-area {
+      min-height: 280px !important;
+      padding: 0.75rem !important;
+    }
+
+    .output-tab-bar {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      flex-wrap: wrap !important;
+      gap: 0.25rem !important;
+    }
+
+    .output-tab-btn {
+      padding: 0.3rem 0.55rem !important;
+      font-size: 0.75rem !important;
+    }
+
+    .btn-run-compiler,
+    .btn-ai-compiler {
+      padding: 0.4rem 0.85rem !important;
+      font-size: 0.8rem !important;
+    }
+  }
+
+  @media (max-width: 430px) {
+    .app-logo-text {
+      font-size: 0.85rem !important;
+    }
+
+    .btn-run-compiler span,
+    .btn-ai-compiler span {
+      font-size: 0.78rem !important;
+    }
   }
 </style>
 {% endblock %}

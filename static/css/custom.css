@@ -52,7 +52,7 @@
 }
 
 html, body {
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
 }
 
@@ -571,11 +571,23 @@ img, video, canvas, svg {
   }
 }
 
-/* Tablet & Smaller Laptops (< 992px) */
+/* Dashboard Sidebar Desktop Sticky & Mobile Offcanvas / Collapse Behavior */
+@media (min-width: 992px) {
+  .saas-sidebar {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 86px !important;
+    z-index: 20;
+    max-height: calc(100vh - 106px);
+    overflow-y: auto;
+  }
+}
+
 @media (max-width: 991.98px) {
   .saas-sidebar {
     margin-bottom: 1.5rem;
   }
+}
 
   .navbar-nav {
     padding-top: 0.75rem;

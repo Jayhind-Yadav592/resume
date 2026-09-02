@@ -407,8 +407,30 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   PART C — Full Site Responsiveness Rules (375px, 768px, 1440px)
+   PART C — Full Site Responsiveness Rules (320px to 1920px+)
    ========================================================================== */
+
+/* Universal Fluid Text and Overflow Protection */
+.text-break-word,
+.card-custom,
+.dashboard-card,
+.glass-card,
+.problem-panel,
+.editor-card,
+.mcq-code-snippet,
+.entry-box,
+pre,
+code {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fluid Chart Container */
 .chart-responsive-container {
   position: relative;
   height: 280px;
@@ -421,12 +443,98 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Minimum 44px touch targets on mobile */
+/* Ultra-Compact & Standard Mobile (320px – 480px) */
+@media (max-width: 480px) {
+  .container,
+  .container-fluid {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .card-custom,
+  .dashboard-card,
+  .glass-card,
+  .editor-card,
+  .problem-panel {
+    padding: 1rem !important;
+    border-radius: 12px !important;
+  }
+
+  .card-custom-header,
+  .dashboard-card-header {
+    padding: 0.85rem 1rem !important;
+  }
+
+  .card-custom-body,
+  .dashboard-card-body {
+    padding: 1rem !important;
+  }
+
+  .btn {
+    font-size: 0.875rem !important;
+    padding: 0.55rem 1rem !important;
+  }
+
+  .hero-headline {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .section-header-title {
+    font-size: 1.5rem !important;
+  }
+
+  .display-6 {
+    font-size: 1.75rem !important;
+  }
+
+  .score-circle-lg {
+    width: 100px !important;
+    height: 100px !important;
+  }
+
+  .score-circle-lg span.fs-1 {
+    font-size: 1.75rem !important;
+  }
+
+  .studio-toolbar {
+    padding: 0.75rem !important;
+    gap: 0.75rem !important;
+  }
+
+  .studio-toolbar .btn {
+    width: 100% !important;
+  }
+
+  /* Paper canvas on compact mobile */
+  .paper-canvas-wrapper {
+    padding: 0.75rem !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  #resume-document-preview {
+    padding: 20px 18px !important;
+    min-height: auto !important;
+  }
+
+  .resume-name {
+    font-size: 18px !important;
+  }
+
+  .resume-contact-bar {
+    font-size: 9.5px !important;
+    gap: 4px 6px !important;
+  }
+}
+
+/* Mobile & Tablet (< 768px) */
 @media (max-width: 767.98px) {
   .btn, 
   .sidebar-nav-link, 
   .meet-control-btn, 
-  .time-pill-btn {
+  .time-pill-btn,
+  .option-card {
     min-height: 44px;
   }
 
@@ -442,12 +550,85 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 14px 14px 0 0;
     box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
   }
+
+  /* Coding IDE stacked panes */
+  .problem-panel,
+  .editor-ide-panel {
+    height: auto !important;
+    min-height: 380px !important;
+  }
+
+  .ide-textarea {
+    min-height: 260px !important;
+  }
+
+  /* Meet Toolbar adjustments */
+  .meet-bottom-bar {
+    padding: 8px 12px !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    justify-content: center !important;
+  }
 }
 
-/* Dashboard Sidebar Mobile Offcanvas / Collapse Behavior */
+/* Tablet & Smaller Laptops (< 992px) */
 @media (max-width: 991.98px) {
   .saas-sidebar {
     margin-bottom: 1.5rem;
+  }
+
+  .navbar-nav {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .editor-card {
+    max-height: none !important;
+  }
+}
+
+/* Table Responsive Smooth Scrolling */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+/* Modals & Dialogs on Small Screens */
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 0.5rem !important;
+    max-width: calc(100vw - 1rem) !important;
+  }
+
+  .modal-content {
+    border-radius: 14px !important;
+  }
+}
+
+/* Large & Ultra-wide Screen Layout Balance (1440px+) */
+@media (min-width: 1440px) {
+  .container,
+  .container-lg,
+  .container-xl {
+    max-width: 1360px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .container,
+  .container-lg,
+  .container-xl {
+    max-width: 1540px;
   }
 }
 

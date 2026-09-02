@@ -8,9 +8,12 @@
   .compiler-wrapper {
     padding-top: 0.75rem;
     padding-bottom: 2.5rem;
+    transition: all 0.25s ease;
   }
 
-  /* OneCompiler Top Navigation Bar */
+  /* =========================================================================
+     DARK THEME (BLACK / DEFAULT)
+     ========================================================================= */
   .compiler-topbar {
     background: #0F172A;
     border: 1px solid #1E293B;
@@ -21,6 +24,7 @@
     align-items: center;
     margin-bottom: 0.75rem;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transition: all 0.25s ease;
   }
 
   .btn-run-compiler {
@@ -78,7 +82,7 @@
     }
   }
 
-  /* Left Pane: Code Editor with Line Numbers */
+  /* Left Pane: Code Editor */
   .editor-container-card {
     background: #0F172A;
     border: 1px solid #1E293B;
@@ -87,6 +91,7 @@
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    transition: all 0.25s ease;
   }
 
   .editor-tab-bar {
@@ -96,6 +101,7 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #334155;
+    transition: all 0.25s ease;
   }
 
   .file-tab-btn {
@@ -159,6 +165,7 @@
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    transition: all 0.25s ease;
   }
 
   .output-tab-bar {
@@ -168,6 +175,7 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #334155;
+    transition: all 0.25s ease;
   }
 
   .output-tab-btn {
@@ -216,34 +224,227 @@
     color: #64748B;
   }
 
-  /* Problem Drawer (Optional Mode) */
   .problem-badge-easy { background: rgba(16, 185, 129, 0.12); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); }
   .problem-badge-medium { background: rgba(245, 158, 11, 0.12); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+  /* =========================================================================
+     LIGHT THEME (WHITE / DAY MODE)
+     ========================================================================= */
+  .compiler-wrapper.theme-light .compiler-topbar {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .compiler-wrapper.theme-light .compiler-topbar .app-logo-text {
+    color: #0F172A !important;
+  }
+
+  .compiler-wrapper.theme-light .compiler-topbar .btn-outline-secondary {
+    border-color: #CBD5E1 !important;
+    color: #334155 !important;
+    background: #F8FAFC !important;
+  }
+
+  .compiler-wrapper.theme-light .compiler-topbar .btn-outline-secondary:hover {
+    background: #EEF2FF !important;
+    border-color: #4F46E5 !important;
+    color: #4F46E5 !important;
+  }
+
+  .compiler-wrapper.theme-light .compiler-topbar select {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    border-color: #CBD5E1 !important;
+  }
+
+  .compiler-wrapper.theme-light .editor-container-card {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .compiler-wrapper.theme-light .editor-tab-bar {
+    background: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+  }
+
+  .compiler-wrapper.theme-light .file-tab-btn {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    border-color: #CBD5E1 !important;
+    border-bottom: 2px solid #4F46E5 !important;
+  }
+
+  .compiler-wrapper.theme-light .editor-body-wrapper {
+    background: #FFFFFF !important;
+  }
+
+  .compiler-wrapper.theme-light .line-numbers-gutter {
+    background: #F8FAFC !important;
+    color: #94A3B8 !important;
+    border-color: #E2E8F0 !important;
+  }
+
+  .compiler-wrapper.theme-light .code-textarea {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    caret-color: #4F46E5 !important;
+  }
+
+  .compiler-wrapper.theme-light .output-container-card {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .compiler-wrapper.theme-light .output-tab-bar {
+    background: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+  }
+
+  .compiler-wrapper.theme-light .output-tab-btn {
+    color: #64748B !important;
+  }
+
+  .compiler-wrapper.theme-light .output-tab-btn.active {
+    background: #FFFFFF !important;
+    color: #4F46E5 !important;
+    border-color: #CBD5E1 !important;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.08) !important;
+  }
+
+  .compiler-wrapper.theme-light .output-content-area {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+  }
+
+  .compiler-wrapper.theme-light #problem-info-drawer {
+    background: #F8FAFC !important;
+    color: #334155 !important;
+    border-color: #E2E8F0 !important;
+  }
+
+  .compiler-wrapper.theme-light #problem-info-drawer h4 {
+    color: #0F172A !important;
+  }
+
+  .compiler-wrapper.theme-light #problem-info-drawer .text-white-50 {
+    color: #64748B !important;
+  }
+
+  .compiler-wrapper.theme-light #stdin-input {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    border-color: #CBD5E1 !important;
+  }
+
+  .compiler-wrapper.theme-light #ai-response-box {
+    background: #F8FAFC !important;
+    color: #1E293B !important;
+    border: 1px solid #E2E8F0 !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+  }
+
+  .compiler-wrapper.theme-light #exec-time-badge {
+    background: #F1F5F9 !important;
+    color: #475569 !important;
+    border-color: #CBD5E1 !important;
+  }
+
+  .compiler-wrapper.theme-light pre.bg-black {
+    background-color: #F8FAFC !important;
+    color: #0F172A !important;
+    border: 1px solid #E2E8F0 !important;
+  }
+
+  .compiler-wrapper.theme-light .bg-black {
+    background-color: #F8FAFC !important;
+    color: #0F172A !important;
+  }
+
+  .compiler-wrapper.theme-light .border-secondary {
+    border-color: #E2E8F0 !important;
+  }
+
+  .compiler-wrapper.theme-light .text-white-50 {
+    color: #64748B !important;
+  }
+
+  .compiler-wrapper.theme-light .text-light {
+    color: #0F172A !important;
+  }
+
+  .compiler-wrapper.theme-light .console-placeholder {
+    color: #94A3B8 !important;
+  }
+
+  .compiler-wrapper.theme-light .console-placeholder .text-light {
+    color: #0F172A !important;
+  }
+
+  .compiler-wrapper.theme-light #problemListModal .modal-content {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+  }
+
+  .compiler-wrapper.theme-light #problemListModal .modal-header {
+    border-color: #E2E8F0 !important;
+  }
+
+  .compiler-wrapper.theme-light #problemListModal .modal-title {
+    color: #0F172A !important;
+  }
+
+  .compiler-wrapper.theme-light #problemListModal .list-group-item {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    border-color: #E2E8F0 !important;
+  }
+
+  .compiler-wrapper.theme-light #problemListModal .list-group-item:hover {
+    background: #F8FAFC !important;
+  }
+
+  .compiler-wrapper.theme-light #problemListModal .list-group-item .fw-bold {
+    color: #0F172A !important;
+  }
+
+  .compiler-wrapper.theme-light #problemListModal .btn-close-white {
+    filter: none !important;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-3 px-lg-4 compiler-wrapper">
+<div class="container-fluid px-3 px-lg-4 compiler-wrapper" id="compiler-root-container">
   <!-- Top Command Toolbar (OneCompiler Style) -->
   <div class="compiler-topbar">
     <!-- Left Logo & Mode Selector -->
     <div class="d-flex align-items-center flex-wrap gap-2.5">
-      <a href="/resumes/dashboard/" class="btn btn-outline-secondary btn-sm py-1 px-2.5 text-white rounded-pill" title="Dashboard">
+      <a href="/resumes/dashboard/" class="btn btn-outline-secondary btn-sm py-1 px-2.5 rounded-pill" title="Dashboard">
         <i class="bi bi-arrow-left me-1"></i> Dashboard
       </a>
       <div class="d-flex align-items-center gap-2">
         <span class="text-primary fw-extrabold fs-5 font-monospace">&lt;/&gt;</span>
-        <span class="fw-bold text-white fs-6">ResumeForge Compiler</span>
+        <span class="fw-bold app-logo-text fs-6 text-white">ResumeForge Compiler</span>
       </div>
 
       <!-- Problem Switcher Dropdown -->
-      <button type="button" class="btn btn-outline-secondary btn-sm py-1 px-3 text-white rounded-pill shadow-xs" data-bs-toggle="modal" data-bs-target="#problemListModal" id="btn-problem-selector">
+      <button type="button" class="btn btn-outline-secondary btn-sm py-1 px-3 rounded-pill shadow-xs" data-bs-toggle="modal" data-bs-target="#problemListModal" id="btn-problem-selector">
         <i class="bi bi-journal-code text-primary me-1"></i> <span id="current-problem-label">Freeform Compiler</span> ▾
       </button>
     </div>
 
     <!-- Center & Right Controls -->
     <div class="d-flex align-items-center flex-wrap gap-2">
+      <!-- Light / Dark Theme Switcher Button -->
+      <button type="button" id="btn-theme-toggle" class="btn btn-outline-secondary btn-sm py-1 px-2.5 rounded-3 d-inline-flex align-items-center gap-1.5" onclick="toggleCompilerTheme()" title="Switch Light/Dark Mode">
+        <i class="bi bi-sun-fill text-warning" id="theme-icon"></i>
+        <span id="theme-text" class="small fw-semibold">Light</span>
+      </button>
+
       <!-- AI Agent Button -->
       <button type="button" class="btn-ai-compiler" onclick="triggerAIAssistant('review')">
         <i class="bi bi-stars"></i> <span>AI Agent</span>
@@ -265,7 +466,7 @@
       </button>
 
       <!-- Reset Code -->
-      <button type="button" onclick="resetEditorCode()" class="btn btn-outline-secondary btn-sm py-1.5 px-2 text-white" title="Reset Starter Code">
+      <button type="button" onclick="resetEditorCode()" class="btn btn-outline-secondary btn-sm py-1.5 px-2" title="Reset Starter Code">
         <i class="bi bi-arrow-clockwise"></i>
       </button>
     </div>
@@ -422,6 +623,7 @@
   let currentProblemData = null;
   let allProblemsList = [];
   let isFreeformMode = true;
+  let currentCompilerTheme = localStorage.getItem('resumeforge_compiler_theme') || 'dark';
 
   const defaultStarterSnippets = {
     python: 'print("Hello, World!")\n\n# Example algorithm:\nfor i in range(1, 6):\n    print(f"Count: {i}")\n',
@@ -431,10 +633,45 @@
   };
 
   document.addEventListener('DOMContentLoaded', async () => {
+    applyCompilerTheme(currentCompilerTheme);
     setupLineNumbers();
     setupKeyboardShortcuts();
     await fetchProblemsList();
   });
+
+  function applyCompilerTheme(theme) {
+    currentCompilerTheme = theme;
+    const root = document.getElementById('compiler-root-container');
+    const icon = document.getElementById('theme-icon');
+    const text = document.getElementById('theme-text');
+    const langSelect = document.getElementById('lang-select');
+
+    if (!root) return;
+
+    if (theme === 'light') {
+      root.classList.add('theme-light');
+      if (icon) icon.className = 'bi bi-moon-stars-fill text-primary';
+      if (text) text.textContent = 'Dark';
+      if (langSelect) {
+        langSelect.classList.remove('bg-dark', 'text-white');
+        langSelect.classList.add('bg-white', 'text-dark');
+      }
+    } else {
+      root.classList.remove('theme-light');
+      if (icon) icon.className = 'bi bi-sun-fill text-warning';
+      if (text) text.textContent = 'Light';
+      if (langSelect) {
+        langSelect.classList.remove('bg-white', 'text-dark');
+        langSelect.classList.add('bg-dark', 'text-white');
+      }
+    }
+    localStorage.setItem('resumeforge_compiler_theme', theme);
+  }
+
+  function toggleCompilerTheme() {
+    const nextTheme = (currentCompilerTheme === 'dark') ? 'light' : 'dark';
+    applyCompilerTheme(nextTheme);
+  }
 
   function setupLineNumbers() {
     const editor = document.getElementById('code-editor');

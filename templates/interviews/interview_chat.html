@@ -28,9 +28,9 @@
     <!-- Question Step Indicator & Controls -->
     <div class="d-flex align-items-center gap-3">
       <div class="text-md-end">
-        <div class="small fw-bold text-dark mb-0.5" id="question-progress-label">Question 1 of 6</div>
-        <div class="progress" style="height: 6px; width: 130px;">
-          <div id="question-progress-bar" class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 16%;"></div>
+        <div class="small fw-bold text-dark mb-0.5" id="question-progress-label">Step 1 of 16 (Intro)</div>
+        <div class="progress" style="height: 6px; width: 140px;">
+          <div id="question-progress-bar" class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 6%;"></div>
         </div>
       </div>
       <button type="button" class="btn btn-outline-custom btn-sm rounded-pill px-3" onclick="toggleSideDrawer()" id="btn-toggle-drawer-top">
@@ -269,20 +269,20 @@
       </div>
       <div class="col-6 col-md-3">
         <div class="p-3 rounded-3 border text-center bg-light">
-          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">Technical Depth</div>
-          <div class="fs-2 fw-extrabold text-success" id="metric-tech-score">85%</div>
+          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">🌱 Basic Fundamentals</div>
+          <div class="fs-2 fw-extrabold text-success" id="metric-basic-score">88%</div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="p-3 rounded-3 border text-center bg-light">
-          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">Communication</div>
-          <div class="fs-2 fw-extrabold text-info" id="metric-comm-score">90%</div>
+          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">⚡ Intermediate Eng.</div>
+          <div class="fs-2 fw-extrabold text-info" id="metric-intermediate-score">85%</div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="p-3 rounded-3 border text-center bg-light">
-          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">Problem Solving</div>
-          <div class="fs-2 fw-extrabold text-warning" id="metric-problem-score">86%</div>
+          <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem;">🔥 Advanced Arch.</div>
+          <div class="fs-2 fw-extrabold text-warning" id="metric-advanced-score">84%</div>
         </div>
       </div>
     </div>
@@ -309,7 +309,7 @@
 
 {% block extra_scripts %}
 <!-- Real-Time Voice Engine -->
-<script src="{% static 'js/interviews/voice.js' %}?v=20260902_3"></script>
+<script src="{% static 'js/interviews/voice.js' %}?v=20260908_1"></script>
 
 <script>
   let currentSessionId = null;
@@ -321,6 +321,7 @@
   let callSeconds = 0;
   let callTimerInterval = null;
   let currentQuestionOrder = 1;
+  const TOTAL_TURNS = 16;
 
   document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -341,6 +342,18 @@
     initRoomMedia();
     await loadInterviewSession(currentSessionId, token);
   });
+
+  function getClientStageInfo(order) {
+    if (order === 1) {
+      return { label: '🎙️ Warm Introduction & Background', badgeClass: 'bg-primary text-white', progress: 'Step 1 of 16 (Intro)' };
+    } else if (order >= 2 && order <= 6) {
+      return { label: `🌱 Stage 1: Basic Fundamentals (Q${order - 1}/5)`, badgeClass: 'bg-success text-white', progress: `Question ${order - 1} of 15 • Step ${order}/16` };
+    } else if (order >= 7 && order <= 11) {
+      return { label: `⚡ Stage 2: Intermediate Implementation (Q${order - 6}/5)`, badgeClass: 'bg-info text-dark', progress: `Question ${order - 1} of 15 • Step ${order}/16` };
+    } else {
+      return { label: `🔥 Stage 3: Advanced Architecture (Q${order - 11}/5)`, badgeClass: 'bg-warning text-dark', progress: `Question ${order - 1} of 15 • Step ${order}/16` };
+    }
+  }
 
   // Call Duration Timer
   function startCallTimer() {
@@ -526,20 +539,25 @@
   }
 
   function setActiveQuestionDisplay(questionText, order) {
-    document.getElementById('active-question-badge').textContent = `Question ${order} of 6`;
+    const stageInfo = getClientStageInfo(order);
+    const badgeEl = document.getElementById('active-question-badge');
+    badgeEl.textContent = stageInfo.label;
+    badgeEl.className = `badge rounded-pill px-2.5 py-1 ${stageInfo.badgeClass}`;
+    
     document.getElementById('active-question-text').textContent = questionText;
     document.getElementById('meet-caption-text').textContent = questionText;
   }
 
   function appendAiBubble(text, order, autoSpeak = false) {
+    const stageInfo = getClientStageInfo(order);
     const box = document.getElementById('chat-messages-box');
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble-ai mb-2';
 
     bubble.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.7rem;">
-          <i class="bi bi-robot me-1"></i> Question ${order} of 6
+        <span class="badge ${stageInfo.badgeClass} rounded-pill" style="font-size: 0.7rem;">
+          <i class="bi bi-robot me-1"></i> ${stageInfo.label}
         </span>
       </div>
       <div class="text-dark small" style="line-height: 1.6;">${text}</div>
@@ -571,9 +589,10 @@
   }
 
   function updateProgress(order) {
-    const capped = Math.min(order, 6);
-    document.getElementById('question-progress-label').textContent = `Question ${capped} of 6`;
-    document.getElementById('question-progress-bar').style.width = `${Math.round((capped / 6) * 100)}%`;
+    const capped = Math.min(order, TOTAL_TURNS);
+    const stageInfo = getClientStageInfo(capped);
+    document.getElementById('question-progress-label').textContent = stageInfo.progress;
+    document.getElementById('question-progress-bar').style.width = `${Math.round((capped / TOTAL_TURNS) * 100)}%`;
   }
 
   function scrollToBottom() {
@@ -608,7 +627,7 @@
         }
 
         if (data.is_completed || !data.next_question) {
-          updateProgress(6);
+          updateProgress(TOTAL_TURNS);
           showCompletionState(data.summary, data.scores);
         } else {
           currentQuestionOrder = data.next_question.order;
@@ -666,9 +685,15 @@
 
     if (scores) {
       if (scores.overall) document.getElementById('metric-overall-score').textContent = `${scores.overall}%`;
-      if (scores.technical) document.getElementById('metric-tech-score').textContent = `${scores.technical}%`;
-      if (scores.communication) document.getElementById('metric-comm-score').textContent = `${scores.communication}%`;
-      if (scores.problem_solving) document.getElementById('metric-problem-score').textContent = `${scores.problem_solving}%`;
+      if (scores.basic_fundamentals || scores.technical) {
+        document.getElementById('metric-basic-score').textContent = `${scores.basic_fundamentals || scores.technical}%`;
+      }
+      if (scores.intermediate_implementation || scores.problem_solving) {
+        document.getElementById('metric-intermediate-score').textContent = `${scores.intermediate_implementation || scores.problem_solving}%`;
+      }
+      if (scores.advanced_architecture || scores.communication) {
+        document.getElementById('metric-advanced-score').textContent = `${scores.advanced_architecture || scores.communication}%`;
+      }
     }
 
     const summaryCard = document.getElementById('summary-card');

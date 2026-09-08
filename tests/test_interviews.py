@@ -68,14 +68,14 @@ class TestMockInterviewEngine:
         assert session.questions.count() == 2
 
     def test_answer_final_question_completes_session(self, auth_client, sample_user, mock_groq_interview):
-        """Test answering the 6th question completes the session and stores the summary."""
+        """Test answering the 16th final question completes the session and stores the summary."""
         session = InterviewSession.objects.create(
             user=sample_user,
             job_role='Fullstack Developer',
             status='in_progress'
         )
-        # Seed 5 answered questions
-        for i in range(1, 6):
+        # Seed 15 answered questions (1 Intro + 5 Basic + 5 Intermediate + 4 Advanced)
+        for i in range(1, 16):
             InterviewQuestion.objects.create(
                 session=session,
                 question_text=f"Question {i}",
@@ -84,16 +84,16 @@ class TestMockInterviewEngine:
                 order=i
             )
 
-        # 6th active question
-        q6 = InterviewQuestion.objects.create(
+        # 16th active question (5th Advanced question)
+        q16 = InterviewQuestion.objects.create(
             session=session,
-            question_text="What is your long-term engineering vision?",
-            order=6
+            question_text="What is your disaster recovery and failover architecture strategy?",
+            order=16
         )
 
         url = reverse('interview-answer', kwargs={'session_id': session.id})
         payload = {
-            'answer_text': 'I aim to architect resilient distributed systems while mentoring juniors.'
+            'answer_text': 'I aim to architect resilient distributed systems with multi-region failover and active-active replicas.'
         }
 
         response = auth_client.post(url, payload, format='json')

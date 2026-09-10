@@ -6,9 +6,12 @@ LinkedIn Bio Optimization, 1-Click Auto-Tailor Resume Engine, and Tech Salary Es
 import io
 import json
 import logging
+import os
 import re
 import urllib.request
 import urllib.error
+import zipfile
+import xml.etree.ElementTree as ET
 from typing import Dict, Any, Tuple, List, Set, Optional
 from django.conf import settings
 from django.utils import timezone
@@ -29,13 +32,18 @@ class PaymentRequiredException(APIException):
 ATS_SCORE_SYSTEM_PROMPT = """You are a seasoned Silicon Valley Tech Recruiter and Senior Engineering Leader.
 Analyze the candidate's Resume text against the target Job Description (JD) with empathy and sharp technical precision.
 
+CRITICAL INSTRUCTIONS FOR "missing_keywords":
+- "missing_keywords" MUST ONLY contain concrete technical skills, software tools, frameworks, libraries, programming languages, databases, cloud platforms, and specialized domain engineering competencies (e.g., "Docker", "PostgreSQL", "Cloudflare", "Neon", "Cloudinary", "FastAPI", "React", "Kafka", "Kubernetes", "Redis", "TypeScript").
+- NEVER include generic English words, action verbs, adjectives, headings, or general work terms (e.g. NEVER output "Overview", "Write", "Develop", "Implement", "Strong", "Building", "Candidate", "Experience", "Requirements", "Responsibilities", "Team", "Work", "Good", "Excellent", "Knowledge", "Ability", "Understanding", "Communication", "Management", "Design", "Maintain", "Create", "Support", "Ensure").
+- If no genuine technical skills are missing, return an empty list [].
+
 You MUST return STRICT JSON adhering EXACTLY to this schema (no markdown formatting, no code fences, no extra text):
 {
   "overall_score": <integer from 0 to 100>,
   "keyword_score": <integer from 0 to 100>,
   "formatting_score": <integer from 0 to 100>,
   "experience_score": <integer from 0 to 100>,
-  "missing_keywords": ["<string keyword 1>", "<string keyword 2>", ...],
+  "missing_keywords": ["<concrete tech skill 1>", "<concrete tech skill 2>", ...],
   "suggestions": ["<actionable advice 1>", "<actionable advice 2>", ...]
 }
 """
@@ -121,12 +129,99 @@ COMMON_TECH_KEYWORDS = [
     "Node.js", "Express", "PostgreSQL", "MySQL", "MongoDB", "Redis", "SQLite", "SQL",
     "Docker", "Kubernetes", "AWS", "GCP", "Azure", "CI/CD", "Git", "GitHub", "Linux",
     "REST API", "GraphQL", "Microservices", "Celery", "Kafka", "RabbitMQ", "HTML", "CSS",
-    "Tailwind", "Bootstrap", "Unit Testing", "Pytest", "Jest", "Agile", "Scrum",
+    "Tailwind", "TailwindCSS", "Bootstrap", "Unit Testing", "Pytest", "Jest", "Agile", "Scrum",
     "System Design", "Distributed Systems", "Machine Learning", "NLP", "Pandas", "NumPy",
     "TensorFlow", "PyTorch", "Terraform", "Ansible", "Jenkins", "DevOps", "Cybersecurity",
     "Object Oriented Programming", "Data Structures", "Algorithms", "Performance Optimization",
-    "Redux", "Next.js", "Webpack", "Vite", "Serverless", "Elasticsearch", "Nginx", "Apache"
+    "Redux", "Next.js", "Webpack", "Vite", "Serverless", "Elasticsearch", "Nginx", "Apache",
+    "Cloudflare", "Neon", "Cloudinary", "Supabase", "Prisma", "NestJS", "Go", "Golang",
+    "Rust", "Java", "Kotlin", "Swift", "C++", "C#", ".NET", "PHP", "Ruby", "Solidity",
+    "WebSockets", "gRPC", "Prometheus", "Grafana", "Playwright", "Cypress", "Selenium",
+    "LangChain", "LlamaIndex", "OpenSearch", "Snowflake", "BigQuery", "Airflow", "dbt"
 ]
+
+GENERIC_NON_SKILL_WORDS = {
+    # Action verbs
+    "develop", "developing", "development", "developer",
+    "implement", "implementing", "implementation",
+    "write", "writing", "written",
+    "build", "building", "builder",
+    "create", "creating", "creation",
+    "design", "designing", "designer",
+    "maintain", "maintaining", "maintenance",
+    "support", "supporting",
+    "manage", "managing", "management", "manager",
+    "lead", "leading", "leadership", "leader",
+    "ensure", "ensuring",
+    "collaborate", "collaborating", "collaboration",
+    "work", "working", "worker",
+    "deliver", "delivering", "delivery",
+    "drive", "driving",
+    "execute", "executing", "execution",
+    "provide", "providing",
+    "perform", "performing", "performance",
+    "scale", "scaling",
+    "test", "testing",
+    "review", "reviewing",
+    "troubleshoot", "troubleshooting",
+    "optimize", "optimizing", "optimization",
+    "integrate", "integrating", "integration",
+    "coordinate", "coordinating", "coordination",
+    "facilitate", "facilitating",
+    "enhance", "enhancing", "enhancement",
+    "improve", "improving", "improvement",
+    "participate", "participating",
+    "assist", "assisting",
+    "solve", "solving", "solution", "solutions",
+    "deploy", "deploying", "deployment",
+    "handle", "handling",
+    "spearhead", "spearheading",
+    "accelerate", "accelerating",
+    "streamline", "streamlining",
+    "utilize", "utilizing",
+    "leverage", "leveraging",
+    "architect", "architecting", "architecture",
+    "engineer", "engineering",
+    "program", "programming", "programmer",
+
+    # Section Headers & JD meta words
+    "overview", "summary", "description", "job", "role", "position", "opportunity",
+    "responsibility", "responsibilities", "requirement", "requirements", "qualification", "qualifications",
+    "candidate", "candidates", "applicant", "applicants", "person", "people", "team", "teams", "member", "members",
+    "company", "organization", "client", "clients", "stakeholder", "stakeholders",
+    "industry", "business", "product", "products", "project", "projects", "service", "services",
+    "location", "salary", "benefits", "perks", "fulltime", "remote", "hybrid", "onsite",
+    "degree", "bachelor", "bachelors", "master", "masters", "phd", "diploma", "graduate", "graduation",
+    "year", "years", "experience", "experienced", "level", "seniority",
+    "day", "days", "week", "weeks", "month", "months", "time", "hour", "hours",
+
+    # Adjectives & Qualifiers
+    "strong", "solid", "deep", "proven", "demonstrated", "hands", "handson", "excellent", "great", "good",
+    "expert", "expertise", "proficient", "proficiency", "skilled", "ability", "capable", "capacity",
+    "understanding", "knowledge", "familiarity", "passionate", "motivated", "driven", "enthusiastic",
+    "dynamic", "fastpaced", "proactive", "selfstarter", "detailoriented", "innovative", "creative",
+    "effective", "exceptional", "outstanding", "competent", "successful", "key", "core", "primary",
+    "secondary", "basic", "fundamental", "advanced", "intermediate", "high", "low", "medium",
+    "ideal", "preferred", "plus", "bonus", "must", "nice", "desirable", "essential", "critical",
+
+    # Pronouns, Prepositions, Conjunctions & Common English Stopwords
+    "about", "above", "across", "after", "again", "against", "all", "almost", "along", "already",
+    "also", "although", "always", "among", "and", "another", "any", "anyone", "anything", "anywhere",
+    "are", "around", "because", "been", "before", "being", "below", "between", "both", "but", "by",
+    "can", "could", "did", "does", "doing", "done", "down", "during", "each", "either", "else",
+    "enough", "even", "every", "everyone", "everything", "everywhere", "few", "first", "following",
+    "for", "from", "further", "had", "has", "have", "having", "her", "here", "hers", "herself",
+    "him", "himself", "his", "how", "however", "into", "its", "itself", "just", "like", "many",
+    "may", "me", "might", "more", "most", "much", "must", "my", "myself", "neither", "no", "nor",
+    "not", "now", "off", "often", "on", "once", "one", "only", "onto", "other", "others", "our",
+    "ours", "ourselves", "out", "over", "own", "same", "she", "should", "since", "so", "some",
+    "someone", "something", "somewhere", "still", "such", "than", "that", "the", "their", "theirs",
+    "them", "themselves", "then", "there", "these", "they", "this", "those", "through", "thus",
+    "to", "too", "under", "until", "up", "upon", "us", "very", "was", "we", "were", "what",
+    "whatever", "when", "whenever", "where", "wherever", "which", "while", "who", "whoever", "whom",
+    "whose", "why", "will", "with", "within", "without", "would", "yes", "yet", "you", "your",
+    "yours", "yourself", "yourselves"
+}
 
 ACTION_VERBS = [
     "architected", "engineered", "designed", "developed", "built", "implemented", "optimized",
@@ -135,8 +230,54 @@ ACTION_VERBS = [
 ]
 
 
+def is_valid_skill(term: str) -> bool:
+    """Checks whether a term is a genuine technical/domain skill and not a generic word/verb."""
+    if not term or not isinstance(term, str):
+        return False
+    clean = term.strip().lower()
+    if len(clean) < 2 or clean.isdigit():
+        return False
+    if clean in GENERIC_NON_SKILL_WORDS:
+        return False
+    words = clean.split()
+    if all(w in GENERIC_NON_SKILL_WORDS for w in words):
+        return False
+    # Check if exact match with known tech
+    if any(tech.lower() == clean for tech in COMMON_TECH_KEYWORDS):
+        return True
+    # If single word ending in non-skill inflection suffix
+    if len(words) == 1 and clean.endswith(('ing', 'tion', 'ment', 'able', 'ible', 'ness', 'ship', 'ance', 'ence', 'less', 'ful', 'ward', 'ize', 'ise', 'ate', 'ed', 'ly')):
+        return False
+    return True
+
+
+def sanitize_missing_skills(skills: List[str]) -> List[str]:
+    """
+    Cleans and filters missing keywords to ensure only genuine technical skills,
+    tools, libraries, and frameworks are presented to the user.
+    """
+    sanitized = []
+    seen = set()
+    for s in skills:
+        if not isinstance(s, str):
+            continue
+        cleaned = s.strip().strip('"\'.,;:-_')
+        if not is_valid_skill(cleaned):
+            continue
+        lower_s = cleaned.lower()
+        if lower_s in seen:
+            continue
+        seen.add(lower_s)
+        # Match case formatting from COMMON_TECH_KEYWORDS if available
+        matched_kw = next((kw for kw in COMMON_TECH_KEYWORDS if kw.lower() == lower_s), None)
+        sanitized.append(matched_kw if matched_kw else cleaned)
+    return sanitized
+
+
 def extract_keywords_from_text(text: str) -> Set[str]:
     """Finds technical and industry keywords present in the given text."""
+    if not text:
+        return set()
     text_lower = text.lower()
     found = set()
     for kw in COMMON_TECH_KEYWORDS:
@@ -144,11 +285,13 @@ def extract_keywords_from_text(text: str) -> Set[str]:
         if re.search(pattern, text_lower):
             found.add(kw)
 
-    custom_tokens = re.findall(r'\b[A-Z][a-zA-Z0-9\+\#\.\-]{2,}\b', text)
+    custom_tokens = re.findall(r'\b[A-Za-z0-9\+\#\.\-]{2,}\b', text)
     for token in custom_tokens:
-        if token.lower() not in {"the", "and", "for", "with", "this", "that", "you", "your", "will", "are", "have", "from"}:
-            if len(token) > 2 and token.lower() in text_lower:
-                found.add(token)
+        if is_valid_skill(token):
+            # Only include if contains tech characters (+, #, ., digits) or CamelCase
+            if any(ch in token for ch in '+#.0123456789') or (re.search(r'[a-z][A-Z]', token) and token.lower() not in GENERIC_NON_SKILL_WORDS):
+                if token.lower() in text_lower:
+                    found.add(token)
 
     return found
 
@@ -165,7 +308,7 @@ def calculate_heuristic_ats_score(resume_text: str, jd_text: str) -> Dict[str, A
         jd_keywords = {"Python", "REST API", "Database", "Git", "Testing"}
 
     matched_keywords = jd_keywords.intersection(resume_keywords)
-    missing_keywords = list(jd_keywords - resume_keywords)
+    missing_keywords = sanitize_missing_skills(list(jd_keywords - resume_keywords))
 
     total_jd_kw = max(len(jd_keywords), 1)
     match_ratio = len(matched_keywords) / total_jd_kw
@@ -219,7 +362,7 @@ def calculate_heuristic_ats_score(resume_text: str, jd_text: str) -> Dict[str, A
         "keyword_score": keyword_score,
         "formatting_score": formatting_score,
         "experience_score": experience_score,
-        "missing_keywords": missing_keywords[:8] if missing_keywords else ["System Architecture", "Performance Tuning"],
+        "missing_keywords": missing_keywords[:8] if missing_keywords else ["System Design", "Performance Optimization"],
         "suggestions": suggestions
     }
 
@@ -637,29 +780,92 @@ def build_ats_scoring_prompt(resume_text: str, jd_text: str) -> str:
 Please evaluate the match score and return the strict JSON schema."""
 
 
+def extract_text_from_file(file_obj, filename: str = '') -> str:
+    """
+    Extracts plain text content from uploaded resume documents.
+    Supports PDF (.pdf), Word Documents (.docx, .doc), and Text files (.txt, .rtf, .md).
+    """
+    if hasattr(file_obj, 'seek'):
+        file_obj.seek(0)
+
+    # Read bytes safely
+    try:
+        content_bytes = file_obj.read()
+    except Exception as e:
+        logger.error(f"Failed reading uploaded file buffer: {e}")
+        raise ValueError("Could not read uploaded file content.")
+
+    if not content_bytes:
+        raise ValueError("The uploaded document is empty.")
+
+    # Determine format by filename or magic bytes
+    name_lower = (filename or getattr(file_obj, 'name', '')).lower()
+    extracted_text = []
+
+    # 1. PDF Handling
+    is_pdf = name_lower.endswith('.pdf') or content_bytes.startswith(b'%PDF')
+    if is_pdf:
+        try:
+            with pdfplumber.open(io.BytesIO(content_bytes)) as pdf:
+                for idx, page in enumerate(pdf.pages):
+                    text = page.extract_text()
+                    if text:
+                        extracted_text.append(text)
+            full_text = "\n\n".join(extracted_text).strip()
+            if full_text:
+                return full_text
+        except Exception as e:
+            logger.warning(f"pdfplumber failed: {e}")
+
+    # 2. DOCX Handling (ZIP archive containing word/document.xml)
+    is_docx = name_lower.endswith('.docx') or (content_bytes.startswith(b'PK') and b'word/' in content_bytes[:2000])
+    if is_docx or (not extracted_text and content_bytes.startswith(b'PK')):
+        try:
+            with zipfile.ZipFile(io.BytesIO(content_bytes), 'r') as z:
+                if 'word/document.xml' in z.namelist():
+                    xml_content = z.read('word/document.xml')
+                    tree = ET.fromstring(xml_content)
+                    paragraphs = []
+                    for p in tree.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p'):
+                        texts = [elem.text for elem in p.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t') if elem.text]
+                        if texts:
+                            paragraphs.append("".join(texts).strip())
+                    full_text = "\n".join([p for p in paragraphs if p]).strip()
+                    if full_text:
+                        return full_text
+        except Exception as e:
+            logger.warning(f"DOCX extraction note: {e}")
+
+    # 3. Plain Text / Markdown / RTF Handling
+    for enc in ['utf-8', 'utf-16', 'latin-1', 'cp1252']:
+        try:
+            decoded = content_bytes.decode(enc)
+            if decoded.startswith('{\\rtf'):
+                decoded = re.sub(r'\\[a-z0-9]+', ' ', decoded)
+                decoded = re.sub(r'[{}]', '', decoded)
+                decoded = re.sub(r'\s+', ' ', decoded)
+            cleaned = decoded.strip()
+            # If reasonably legible text
+            if len(cleaned) > 20 and sum(1 for c in cleaned if c.isalnum()) > len(cleaned) * 0.4:
+                return cleaned
+        except (UnicodeDecodeError, LookupError):
+            continue
+
+    # 4. Fallback Binary ASCII stream extraction for legacy DOC
+    ascii_strings = re.findall(r'[a-zA-Z0-9\s.,;:\'"\(\)\/\-\+\#\@]{4,}', content_bytes.decode('ascii', errors='ignore'))
+    if ascii_strings:
+        candidate_text = "\n".join([s.strip() for s in ascii_strings if len(s.strip()) > 3])
+        if len(candidate_text) > 50:
+            return candidate_text
+
+    raise ValueError("The uploaded document does not contain readable text (it might be scanned/image-only or corrupted).")
+
+
 def extract_text_from_pdf(file_obj) -> str:
     """
-    Extracts text content from a PDF file object using pdfplumber.
+    Backward-compatible alias for resume text extraction.
     """
-    extracted_text = []
-    try:
-        if hasattr(file_obj, 'seek'):
-            file_obj.seek(0)
-
-        with pdfplumber.open(file_obj) as pdf:
-            for idx, page in enumerate(pdf.pages):
-                text = page.extract_text()
-                if text:
-                    extracted_text.append(text)
-    except Exception as e:
-        logger.error(f"Failed to parse PDF with pdfplumber: {e}")
-        raise ValueError(f"Could not parse PDF content: {str(e)}")
-
-    full_text = "\n\n".join(extracted_text).strip()
-    if not full_text:
-        raise ValueError("The uploaded PDF does not contain extractable text (it might be scanned/image-only).")
-
-    return full_text
+    return extract_text_from_file(file_obj, filename=getattr(file_obj, 'name', 'resume.pdf'))
 
 
 def check_free_tier_limit(user) -> None:
@@ -707,12 +913,15 @@ def score_resume_with_groq(resume_text: str, jd_text: str, retry_count: int = 1)
                 cleaned = clean_json_response(raw_content)
                 data = json.loads(cleaned)
 
+                raw_missing = list(data.get("missing_keywords", []))
+                sanitized_missing = sanitize_missing_skills(raw_missing)
+
                 return {
                     "overall_score": int(data.get("overall_score", 0)),
                     "keyword_score": int(data.get("keyword_score", 0)),
                     "formatting_score": int(data.get("formatting_score", 0)),
                     "experience_score": int(data.get("experience_score", 0)),
-                    "missing_keywords": list(data.get("missing_keywords", [])),
+                    "missing_keywords": sanitized_missing,
                     "suggestions": list(data.get("suggestions", []))
                 }
 
@@ -751,7 +960,7 @@ def process_scan_task(scan_result_id: int) -> None:
         scan_result.keyword_score = scores.get('keyword_score', 0)
         scan_result.formatting_score = scores.get('formatting_score', 0)
         scan_result.experience_score = scores.get('experience_score', 0)
-        scan_result.missing_keywords = scores.get('missing_keywords', [])
+        scan_result.missing_keywords = sanitize_missing_skills(scores.get('missing_keywords', []))
         scan_result.suggestions = scores.get('suggestions', [])
         scan_result.status = 'completed'
         scan_result.error_message = None

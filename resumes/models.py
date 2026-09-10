@@ -8,7 +8,7 @@ from django.db import models
 
 class Resume(models.Model):
     """
-    Uploaded resume PDF and parsed raw text.
+    Uploaded candidate resume file (PDF, Word, or Text) and parsed raw text.
     """
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -18,12 +18,12 @@ class Resume(models.Model):
     )
     file = models.FileField(
         upload_to='resumes/%Y/%m/',
-        validators=[FileExtensionValidator(allowed_extensions=['pdf'])],
-        help_text="PDF format only, maximum 5MB."
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'docx', 'doc', 'txt', 'rtf', 'md'])],
+        help_text="PDF, DOCX, DOC, TXT, or RTF format, maximum 5MB."
     )
     parsed_text = models.TextField(
         blank=True,
-        help_text="Extracted plain text from the uploaded PDF resume."
+        help_text="Extracted plain text from the uploaded resume file."
     )
     uploaded_at = models.DateTimeField(
         auto_now_add=True,

@@ -14,8 +14,11 @@ from resumes.services import (
     score_resume_with_groq,
     check_free_tier_limit,
     PaymentRequiredException,
+    extract_text_from_file,
     extract_text_from_pdf,
     clean_json_response,
+    sanitize_missing_skills,
+    is_valid_skill,
 )
 from resumes.tasks import process_resume_scan, send_weekly_pro_digest
 
@@ -25,11 +28,11 @@ class TestResumeUploadAndValidation:
     """Test suite for resume upload and PDF parsing."""
 
     def test_upload_resume_success(self, auth_client, sample_pdf_file, mock_groq_scoring, monkeypatch):
-        """Test valid PDF upload starts async scan and returns 202."""
+        """Test valid PDF and document upload starts async scan and returns 202."""
         # Monkeypatch celery task delay
         mock_delay = MagicMock()
         monkeypatch.setattr("resumes.tasks.process_resume_scan.delay", mock_delay)
-        monkeypatch.setattr("resumes.views.extract_text_from_pdf", lambda f: "Sample parsed resume text.")
+        monkeypatch.setattr("resumes.views.extract_text_from_file", lambda f, filename='': "Sample parsed resume text.")
 
         url = reverse('resume-upload')
         payload = {
@@ -50,13 +53,30 @@ class TestResumeUploadAndValidation:
         assert scan.resume.parsed_text == "Sample parsed resume text."
         assert scan.job_description.title == "Senior Python Developer"
 
-    def test_upload_resume_rejects_non_pdf(self, auth_client):
-        """Test uploading a non-PDF file (e.g. .docx or .txt) fails validation."""
-        text_file = SimpleUploadedFile("resume.txt", b"plain text resume", content_type="text/plain")
+    def test_upload_resume_docx_txt_success(self, auth_client, monkeypatch):
+        """Test uploading a Word (.docx) or Text (.txt) resume succeeds."""
+        mock_delay = MagicMock()
+        monkeypatch.setattr("resumes.tasks.process_resume_scan.delay", mock_delay)
+        monkeypatch.setattr("resumes.views.extract_text_from_file", lambda f, filename='': "Parsed DOCX/TXT text.")
+
+        text_file = SimpleUploadedFile("resume.txt", b"plain text resume content", content_type="text/plain")
         url = reverse('resume-upload')
         payload = {
             'file': text_file,
-            'job_description': 'Software Engineer required.'
+            'job_description': 'Senior Python Developer with PostgreSQL and Docker experience.',
+            'title': 'Backend Developer'
+        }
+        response = auth_client.post(url, payload, format='multipart')
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert 'scan' in response.data
+
+    def test_upload_resume_rejects_unsupported_format(self, auth_client):
+        """Test uploading an unsupported file format (e.g. .exe or .png) fails validation."""
+        exe_file = SimpleUploadedFile("malicious.exe", b"binary content", content_type="application/octet-stream")
+        url = reverse('resume-upload')
+        payload = {
+            'file': exe_file,
+            'job_description': 'Software Engineer required with Python.'
         }
         response = auth_client.post(url, payload, format='multipart')
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -110,7 +130,7 @@ class TestFreeTierScanQuota:
 
         # Upload endpoint allows unlimited uploads
         monkeypatch.setattr("resumes.tasks.process_resume_scan.delay", MagicMock())
-        monkeypatch.setattr("resumes.views.extract_text_from_pdf", lambda f: "Parsed text")
+        monkeypatch.setattr("resumes.views.extract_text_from_file", lambda f, filename='': "Parsed text")
 
         pdf_file = SimpleUploadedFile("resume4.pdf", b"%PDF-1.4 dummy", content_type="application/pdf")
         url = reverse('resume-upload')
@@ -136,7 +156,7 @@ class TestFreeTierScanQuota:
         check_free_tier_limit(pro_user)
 
         monkeypatch.setattr("resumes.tasks.process_resume_scan.delay", MagicMock())
-        monkeypatch.setattr("resumes.views.extract_text_from_pdf", lambda f: "Pro parsed text")
+        monkeypatch.setattr("resumes.views.extract_text_from_file", lambda f, filename='': "Pro parsed text")
 
         url = reverse('resume-upload')
         pdf_file = SimpleUploadedFile("resume6.pdf", b"%PDF-1.4 dummy", content_type="application/pdf")
@@ -353,5 +373,34 @@ class TestGroqScoringAndCeleryTask:
         for u in urls:
             res = client.get(u)
             assert res.status_code == status.HTTP_200_OK
+
+    def test_sanitize_missing_skills_filters_generic_words(self):
+        """Test that generic verbs and section words are filtered out from missing skills."""
+        raw_words = ["Develop", "Cloudflare", "Overview", "Implement", "Strong", "Neon", "Cloudinary", "Write"]
+        filtered = sanitize_missing_skills(raw_words)
+        assert filtered == ["Cloudflare", "Neon", "Cloudinary"]
+        assert "Overview" not in filtered
+        assert "Write" not in filtered
+        assert "Develop" not in filtered
+        assert "Implement" not in filtered
+        assert "Strong" not in filtered
+
+    def test_extract_text_from_file_formats(self):
+        """Test text extraction from txt and docx buffers."""
+        import io
+        import zipfile
+
+        # Plain text
+        txt_file = io.BytesIO(b"Jane Doe - Staff Software Engineer with Python and AWS.")
+        txt_extracted = extract_text_from_file(txt_file, filename="resume.txt")
+        assert "Jane Doe" in txt_extracted
+        assert "Python" in txt_extracted
+
+        # DOCX in-memory archive
+        docx_io = io.BytesIO()
+        with zipfile.ZipFile(docx_io, 'w') as z:
+            z.writestr('word/document.xml', b'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Alice Smith Resume</w:t></w:r></w:p></w:body></w:document>')
+        docx_extracted = extract_text_from_file(docx_io, filename="resume.docx")
+        assert "Alice Smith" in docx_extracted
 
 

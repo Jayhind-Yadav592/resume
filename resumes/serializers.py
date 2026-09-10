@@ -21,17 +21,20 @@ class ResumeDetailSerializer(serializers.ModelSerializer):
 
 class ResumeUploadSerializer(serializers.Serializer):
     """
-    Serializer for uploading resume PDF and job description text.
-    Validates file format (PDF) and size (max 5MB).
+    Serializer for uploading resume documents (PDF, DOCX, DOC, TXT, RTF, MD) and job description text.
+    Validates supported file formats and size (max 5MB).
     """
     file = serializers.FileField(required=True)
     job_description = serializers.CharField(required=True, min_length=20)
     title = serializers.CharField(required=False, default="Target Position", max_length=255)
 
     def validate_file(self, value):
-        # Validate extension
-        if not value.name.lower().endswith('.pdf'):
-            raise serializers.ValidationError("Only PDF files are supported.")
+        allowed_extensions = ('.pdf', '.docx', '.doc', '.txt', '.rtf', '.md')
+        lower_name = value.name.lower()
+        if not any(lower_name.endswith(ext) for ext in allowed_extensions):
+            raise serializers.ValidationError(
+                "Unsupported file format. Please upload a PDF (.pdf), Word document (.docx, .doc), or Text file (.txt, .rtf, .md)."
+            )
 
         # Validate max size (5MB = 5 * 1024 * 1024 bytes)
         max_size = 5 * 1024 * 1024

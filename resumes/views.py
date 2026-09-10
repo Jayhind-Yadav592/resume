@@ -20,6 +20,7 @@ from resumes.serializers import (
     ScanStatusSerializer
 )
 from resumes.services import (
+    extract_text_from_file,
     extract_text_from_pdf,
     check_free_tier_limit,
     generate_cover_letter_service,
@@ -38,7 +39,7 @@ User = get_user_model()
 
 class ResumeUploadView(APIView):
     """
-    Endpoint for uploading a resume PDF with a job description for ATS scanning.
+    Endpoint for uploading a resume document (PDF, DOCX, DOC, TXT, RTF) with a job description for ATS scanning.
     """
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -47,7 +48,7 @@ class ResumeUploadView(APIView):
     @extend_schema(
         summary="Upload Resume & Start ATS Scan",
         description=(
-            "Uploads candidate PDF resume and target job description. "
+            "Uploads candidate resume (PDF, Word DOCX/DOC, Text TXT/RTF) and target job description. "
             "Extracts text and asynchronously queues Groq AI scoring."
         ),
         request=ResumeUploadSerializer,
@@ -66,7 +67,10 @@ class ResumeUploadView(APIView):
         jd_text = serializer.validated_data['job_description']
         title = serializer.validated_data.get('title', 'Target Position')
 
-        parsed_text = extract_text_from_pdf(file_obj)
+        try:
+            parsed_text = extract_text_from_file(file_obj, filename=file_obj.name)
+        except ValueError as val_err:
+            return Response({'file': [str(val_err)]}, status=status.HTTP_400_BAD_REQUEST)
 
         resume = Resume.objects.create(
             user=request.user,

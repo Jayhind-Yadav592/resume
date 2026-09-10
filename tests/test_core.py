@@ -67,3 +67,26 @@ class TestCoreViews:
         assert response.status_code == status.HTTP_200_OK
         assert response.data['status'] == 'healthy'
         assert response.data['service'] == 'resumeforge-api'
+
+    def test_robots_txt_endpoint(self, api_client):
+        """Test robots.txt returns 200 with sitemap declaration."""
+        url = reverse('robots-txt')
+        response = api_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response['Content-Type'] == 'text/plain'
+        content = response.content.decode('utf-8')
+        assert "User-agent: *" in content
+        assert "Sitemap:" in content
+        assert "Disallow: /admin/" in content
+
+    def test_sitemap_xml_endpoint(self, api_client):
+        """Test sitemap.xml returns 200 with XML urlset."""
+        url = reverse('sitemap-xml')
+        response = api_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert 'xml' in response['Content-Type']
+        content = response.content.decode('utf-8')
+        assert "<urlset" in content
+        assert "<loc>https://resume-hn9o.onrender.com/</loc>" in content
+        assert "<loc>https://resume-hn9o.onrender.com/resumes/upload/</loc>" in content
+        assert "<loc>https://resume-hn9o.onrender.com/builder/</loc>" in content

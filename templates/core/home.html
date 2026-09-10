@@ -1,6 +1,56 @@
 {% extends 'base.html' %}
 
-{% block title %}ResumeForge AI — Next-Gen ATS Resume Scanner, Builder & Interview Prep{% endblock %}
+{% block title %}ResumeForge AI — Free ATS Resume Scanner, Resume Builder & Mock Interview Prep{% endblock %}
+
+{% block meta_description %}Scan your resume for free with AI ATS scoring, discover missing tech skill gaps, generate tailored cover letters, and practice live mock interviews with real-time speech feedback.{% endblock %}
+
+{% block meta_keywords %}AI ATS resume scanner, free ATS score checker, AI mock interview room, single page resume builder, salary calculator, FAANG company questions, coding arena{% endblock %}
+
+{% block og_title %}ResumeForge AI — Free ATS Resume Scanner & AI Mock Interview Prep{% endblock %}
+{% block og_description %}Get your instant ATS match score, free course recommendations for missing skills, and practice live Google Meet style AI mock interviews.{% endblock %}
+
+{% block schema_markup %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does the AI ATS Resume Scanner work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ResumeForge extracts text from your PDF, Word (DOCX/DOC), or text resume, analyzes it against the job description using Groq LLM intelligence, and calculates your match score, missing technical skills, and bullet point rewrite suggestions."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is ResumeForge really free to use for students and candidates?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes! Unlimited resume scans, missing keyword breakdowns, LaTeX resume builder, and topic-wise MCQ practice are 100% free forever for all candidates."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What file formats can I upload for resume scanning?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ResumeForge supports all standard resume formats including PDF (.pdf), Microsoft Word (.docx, .doc), and Text files (.txt, .rtf, .md) up to 5MB."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does the Live AI Mock Interview work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Enter our Google Meet style video room with webcam preview and live microphone recognition. The AI interviewer speaks technical questions out loud, listens to your verbal responses, and provides comprehensive scoring and feedback."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
 
 {% block extra_head %}
 <style>

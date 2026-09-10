@@ -12,7 +12,7 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
-from core.views import HomeView, PricingView
+from core.views import HomeView, PricingView, robots_txt_view, sitemap_xml_view
 from accounts.views import LoginTemplateView, RegisterTemplateView
 from resumes.views import (
     ResumeDashboardTemplateView,
@@ -38,6 +38,10 @@ def favicon_view(request):
     return HttpResponse(svg, content_type="image/svg+xml")
 
 urlpatterns = [
+    # SEO robots.txt & sitemap.xml
+    path('robots.txt', robots_txt_view, name='robots-txt'),
+    path('sitemap.xml', sitemap_xml_view, name='sitemap-xml'),
+
     # Favicon
     path('favicon.ico', favicon_view, name='favicon'),
 

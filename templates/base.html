@@ -5,6 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}ResumeForge — AI Resume & Interview Prep SaaS{% endblock %}</title>
 
+  <!-- Primary SEO Meta Tags -->
+  <meta name="description" content="{% block meta_description %}ResumeForge AI — Free AI ATS Resume Scanner, ATS Score Checker, AI Mock Interview Practice with live voice recognition, Resume Builder, and Tech Salary Estimator.{% endblock %}">
+  <meta name="keywords" content="{% block meta_keywords %}AI resume builder, ATS resume scanner, free ATS checker, AI mock interview, interview practice, salary estimator, resume keyword optimizer, Groq AI ATS, tech job preparation{% endblock %}">
+  <meta name="author" content="ResumeForge AI">
+  <meta name="robots" content="{% block meta_robots %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endblock %}">
+  <meta name="theme-color" content="#4F46E5">
+
+  <!-- Open Graph / Facebook / LinkedIn / WhatsApp Preview Cards -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ResumeForge AI">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:title" content="{% block og_title %}ResumeForge — AI ATS Resume Scanner & Mock Interview Prep{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Instant ATS score, missing skill gap analysis with free courses, 1-click tailored cover letters, and live Google Meet style AI mock interviews.{% endblock %}">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=1200&auto=format&fit=crop&q=80">
+  <meta property="og:image:alt" content="ResumeForge AI ATS Scorecard & Live Mock Interview Platform">
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block twitter_title %}ResumeForge AI — Free ATS Score & AI Mock Interview Arena{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}Score your resume against any job description in seconds. Practice live technical mock interviews with instant voice speech AI feedback.{% endblock %}">
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=1200&auto=format&fit=crop&q=80">
+
+  <!-- Canonical URL Tag -->
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,6 +54,48 @@
   <!-- Three.js (r128) 3D Animated Engine -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="{% static 'js/bg-animation.js' %}?v=20260901_7" defer></script>
+
+  <!-- Global JSON-LD Structured Data Schema for Google Rich Snippets -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://resume-hn9o.onrender.com/#organization",
+        "name": "ResumeForge AI",
+        "url": "https://resume-hn9o.onrender.com",
+        "logo": "https://resume-hn9o.onrender.com/favicon.ico",
+        "description": "Next-Generation AI ATS Resume Scanner, Live Mock Interview Prep, and Tech Career Suite."
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://resume-hn9o.onrender.com/#webapp",
+        "name": "ResumeForge AI Suite",
+        "url": "https://resume-hn9o.onrender.com",
+        "applicationCategory": "BusinessApplication, EducationalApplication",
+        "operatingSystem": "All (Web Browser, Mobile Responsive)",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "category": "FreeTier"
+        },
+        "featureList": [
+          "AI ATS Resume Scorecard with Semantic Keyword Parsing",
+          "Multi-Format Resume Upload (PDF, Word DOCX/DOC, Text TXT/RTF)",
+          "Free Skill Gaps Learning Resources",
+          "1-Click Tailored AI Cover Letter Copywriter",
+          "Google Meet Style Live Video Mock Interview with Voice AI",
+          "Interactive Coding & MCQ Practice Arena",
+          "Tech Salary Estimator and Public Verified Candidate Profile"
+        ]
+      }
+    ]
+  }
+  </script>
+
+  {% block schema_markup %}{% endblock %}
 
   {% block extra_head %}{% endblock %}
 </head>

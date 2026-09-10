@@ -150,11 +150,13 @@
 
 {% block extra_scripts %}
 <script>
-  // Redirect to dashboard if already logged in
+  // Redirect if already logged in
   document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('resumeforge_access_token');
+    const urlParams = new URLSearchParams(window.location.search);
+    const nextUrl = urlParams.get('next') || '/resumes/dashboard/';
     if (token) {
-      window.location.href = '/resumes/dashboard/';
+      window.location.href = nextUrl;
     }
   });
 
@@ -214,8 +216,10 @@
         alertBox.innerHTML = `<i class="bi bi-check-circle me-1"></i> Welcome back, <strong>${data.user ? data.user.username : 'there'}</strong>! Redirecting...`;
         alertBox.classList.remove('d-none');
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const nextUrl = urlParams.get('next') || '/resumes/dashboard/';
         setTimeout(() => {
-          window.location.href = '/resumes/dashboard/';
+          window.location.href = nextUrl;
         }, 600);
       } else {
         const errorMsg = data.detail || (data.non_field_errors ? data.non_field_errors.join(' ') : 'Invalid username or password.');

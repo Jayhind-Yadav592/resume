@@ -16,10 +16,10 @@
       <a href="/resumes/upload/" class="btn btn-outline-custom">
         <i class="bi bi-cloud-arrow-up me-1"></i> Scan Another
       </a>
-      <button onclick="scrollToCoverLetter()" class="btn btn-outline-custom">
+      <button type="button" onclick="goToCoverLetter()" class="btn btn-outline-custom" id="btn-top-cover-letter">
         <i class="bi bi-file-earmark-text me-1 text-primary"></i> Cover Letter
       </button>
-      <a href="#" id="btn-start-interview-top" class="btn btn-primary-custom shadow-sm">
+      <a href="/interviews/setup/" id="btn-start-interview-top" class="btn btn-primary-custom shadow-sm">
         <i class="bi bi-camera-video me-1"></i> Practice Interview
       </a>
     </div>
@@ -307,7 +307,7 @@
       <p class="text-secondary small mb-4" style="max-width: 520px; margin: 0 auto; line-height: 1.6;">
         Enter our Google Meet style live video room with webcam preview, voice speech recognition, and instant AI critique for this role.
       </p>
-      <a href="#" id="btn-start-interview-bottom" class="btn btn-primary-custom btn-lg px-5 py-3 shadow">
+      <a href="/interviews/setup/" id="btn-start-interview-bottom" class="btn btn-primary-custom btn-lg px-5 py-3 shadow">
         <i class="bi bi-camera-video-fill me-1.5"></i> Launch Live Mock Interview Call
       </a>
     </div>
@@ -327,22 +327,43 @@
     currentScanId = urlParams.get('id');
     const token = localStorage.getItem('resumeforge_access_token');
 
-    if (!token) {
-      window.location.href = '/login/';
+    if (!currentScanId) {
+      window.location.href = '/resumes/dashboard/';
       return;
     }
 
-    if (!currentScanId) {
-      window.location.href = '/resumes/dashboard/';
+    if (!token) {
+      const nextUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      const loadingEl = document.getElementById('report-loading');
+      if (loadingEl) {
+        loadingEl.innerHTML = `
+          <div class="card-custom p-4 p-md-5 text-center mx-auto shadow-sm" style="max-width: 500px;">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-primary bg-primary-subtle mb-3" style="width: 60px; height: 60px;">
+              <i class="bi bi-shield-lock-fill fs-3"></i>
+            </div>
+            <h3 class="h5 fw-bold text-dark mb-2">Login Required</h3>
+            <p class="text-secondary small mb-4">Please log in to your account to view this ATS scorecard.</p>
+            <a href="/login/?next=${nextUrl}" class="btn btn-primary-custom px-4 py-2">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to View Report
+            </a>
+          </div>
+        `;
+      }
       return;
     }
 
     await loadScanReport(currentScanId, token);
   });
 
-  function scrollToCoverLetter() {
+  function goToCoverLetter() {
     const el = document.getElementById('cover-letter-section');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+    const outputBox = document.getElementById('cover-letter-output');
+    if (outputBox && outputBox.classList.contains('d-none')) {
+      handleGenerateCoverLetter();
+    }
   }
 
   async function loadScanReport(scanId, token) {
@@ -514,11 +535,47 @@
             rewritesContainer.appendChild(item);
           });
         }
+      } else if (res.status === 401 || res.status === 403) {
+        const nextUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        loadingEl.innerHTML = `
+          <div class="card-custom p-4 p-md-5 text-center mx-auto shadow-sm" style="max-width: 500px;">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-primary bg-primary-subtle mb-3" style="width: 60px; height: 60px;">
+              <i class="bi bi-shield-lock-fill fs-3"></i>
+            </div>
+            <h3 class="h5 fw-bold text-dark mb-2">Session Expired or Login Required</h3>
+            <p class="text-secondary small mb-4">Please sign in to your account to view this ATS scorecard.</p>
+            <a href="/login/?next=${nextUrl}" class="btn btn-primary-custom px-4 py-2">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to View Report
+            </a>
+          </div>
+        `;
+        return;
+      } else if (res.status === 404) {
+        loadingEl.innerHTML = `
+          <div class="card-custom p-4 text-center mx-auto shadow-sm" style="max-width: 500px;">
+            <i class="bi bi-file-earmark-x text-warning fs-1 mb-2 d-block"></i>
+            <h3 class="h5 fw-bold text-dark mb-2">Report Not Found</h3>
+            <p class="text-secondary small mb-3">The requested ATS scan scorecard (#${scanId}) could not be found or may belong to another account.</p>
+            <a href="/resumes/upload/" class="btn btn-primary-custom btn-sm px-3">
+              <i class="bi bi-cloud-arrow-up me-1"></i> Run a New Resume Scan
+            </a>
+          </div>
+        `;
+        return;
       } else {
-        throw new Error('Report not found');
+        throw new Error(`Server returned status ${res.status}`);
       }
     } catch (err) {
-      loadingEl.innerHTML = `<div class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i> Error loading report: ${err.message}</div>`;
+      loadingEl.innerHTML = `
+        <div class="card-custom p-4 text-center mx-auto shadow-sm text-danger" style="max-width: 500px;">
+          <i class="bi bi-exclamation-triangle-fill fs-2 mb-2 d-block"></i>
+          <h4 class="h6 fw-bold mb-1">Error Loading Scorecard</h4>
+          <p class="small text-secondary mb-3">${err.message || 'An unexpected error occurred.'}</p>
+          <button onclick="location.reload()" class="btn btn-outline-custom btn-sm">
+            <i class="bi bi-arrow-clockwise me-1"></i> Retry
+          </button>
+        </div>
+      `;
     }
   }
 

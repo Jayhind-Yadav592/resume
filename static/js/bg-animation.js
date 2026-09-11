@@ -57,51 +57,51 @@
     renderer.setSize(width, height, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 
-    // 3. Ambient & Point Lighting (Soft & gentle)
-    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.85);
+    // 3. Ambient & Point Lighting (Warm & soothing)
+    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.90);
     scene.add(ambientLight);
 
-    const pointLightPrimary = new THREE.PointLight(0x4F46E5, 1.5, 90);
+    const pointLightPrimary = new THREE.PointLight(0x2563EB, 1.2, 90);
     pointLightPrimary.position.set(30, 25, 20);
     scene.add(pointLightPrimary);
 
-    const pointLightSecondary = new THREE.PointLight(0x8B5CF6, 1.2, 90);
+    const pointLightSecondary = new THREE.PointLight(0x6366F1, 1.0, 90);
     pointLightSecondary.position.set(-30, -20, 15);
     scene.add(pointLightSecondary);
 
-    // 4. Subtle, Low-Opacity Materials (0.18 - 0.22 opacity so text is 100% legible)
+    // 4. Subtle, Low-Opacity Materials (0.16 - 0.20 opacity for ultra-clean readability)
     const materials = [
       new THREE.MeshStandardMaterial({
-        color: 0x4F46E5,
-        roughness: 0.3,
-        metalness: 0.2,
-        transparent: true,
-        opacity: 0.22,
-        flatShading: true
-      }),
-      new THREE.MeshStandardMaterial({
-        color: 0x8B5CF6,
-        roughness: 0.3,
-        metalness: 0.2,
-        transparent: true,
-        opacity: 0.20,
-        flatShading: true
-      }),
-      new THREE.MeshStandardMaterial({
-        color: 0x06B6D4,
-        roughness: 0.25,
-        metalness: 0.3,
+        color: 0x2563EB,
+        roughness: 0.35,
+        metalness: 0.15,
         transparent: true,
         opacity: 0.18,
+        flatShading: true
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x6366F1,
+        roughness: 0.35,
+        metalness: 0.15,
+        transparent: true,
+        opacity: 0.16,
+        flatShading: true
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x0284C7,
+        roughness: 0.30,
+        metalness: 0.20,
+        transparent: true,
+        opacity: 0.15,
         flatShading: true
       })
     ];
 
     const wireframeMaterial = new THREE.MeshBasicMaterial({
-      color: 0x818CF8,
+      color: 0x93C5FD,
       wireframe: true,
       transparent: true,
-      opacity: 0.16
+      opacity: 0.14
     });
 
     // 5. Refined Geometric Shapes (Smaller scale)

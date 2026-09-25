@@ -154,6 +154,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 WHITENOISE_MAX_AGE = 31536000  # 1 year static asset caching for fast load speeds
 WHITENOISE_MANIFEST_STRICT = False
+WHITENOISE_USE_FINDERS = True
 
 # Media Files (Uploaded Resumes - /tmp writable for Vercel Lambda)
 MEDIA_URL = '/media/'

@@ -1,6 +1,44 @@
 # Production Deployment Runbook — ResumeForge AI
 
-This guide covers production deployment on **Render** and **Railway**.
+This guide covers production deployment on **Vercel**, **Render**, and **Railway**.
+
+---
+
+## 1. Deploying on Vercel (Recommended & Fast)
+
+Vercel is a global serverless platform with zero idle costs and lightning-fast speeds.
+
+### Step A: Provision Free Serverless Database (Neon.tech)
+1. Go to **[Neon.tech](https://neon.tech)** and sign in with GitHub.
+2. Click **Create Project** (Name: `resumeforge-db`).
+3. Under **Connection Details**, copy the **Connection string** (Direct or Pooled PostgreSQL URI):
+   ```
+   postgresql://<user>:<password>@<neon-host>/neondb?sslmode=require
+   ```
+
+### Step B: Import Project in Vercel
+1. Login to **[Vercel Dashboard](https://vercel.com)**.
+2. Click **Add New...** -> **Project**.
+3. Select and import your GitHub repository: `Jayhind-Yadav592/resume`.
+4. In the configuration screen:
+   - **Framework Preset**: `Other`
+   - **Root Directory**: `./` (Default)
+   - **Build & Development Settings**: Keep defaults (configured in `vercel.json` and `build_files.sh`).
+5. Open the **Environment Variables** section and add:
+   | Key | Value |
+   | :--- | :--- |
+   | `DEBUG` | `False` |
+   | `SECRET_KEY` | `your-cryptographically-random-django-secret-key-12345` |
+   | `ALLOWED_HOSTS` | `*` |
+   | `DATABASE_URL` | `postgresql://<user>:<pass>@<host>/neondb?sslmode=require` (From Step A) |
+   | `GROQ_API_KEY` | `gsk_...` (Your Groq API key) |
+   | `GROQ_MODEL` | `llama-3.3-70b-versatile` |
+   | `CELERY_TASK_ALWAYS_EAGER` | `True` |
+   | `RAZORPAY_KEY_ID` | `rzp_live_...` (or test key) |
+   | `RAZORPAY_KEY_SECRET` | `...` |
+   | `RAZORPAY_WEBHOOK_SECRET` | `...` |
+6. Click **Deploy**.
+7. Vercel will run `build_files.sh`, bundle `@vercel/python`, collect static assets, and assign a production URL like `https://resume-xxxx.vercel.app`.
 
 ---
 

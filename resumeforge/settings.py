@@ -28,21 +28,28 @@ if env_file.exists():
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 
-# Render Deployment & Allowed Hosts Configuration
+# Deployment & Allowed Hosts Configuration (Render, Vercel, Railway, Localhost)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# CSRF Trusted Origins (Render & Localhost)
+VERCEL_URL = os.environ.get('VERCEL_URL')
+if VERCEL_URL:
+    ALLOWED_HOSTS.append(VERCEL_URL)
+
+# CSRF Trusted Origins (Render, Vercel & Localhost)
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'https://*.onrender.com',
     'https://*.render.com',
+    'https://*.vercel.app',
 ])
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+if VERCEL_URL:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{VERCEL_URL}')
 
 # Application definition
 INSTALLED_APPS = [
@@ -103,12 +110,13 @@ WSGI_APPLICATION = 'resumeforge.wsgi.application'
 ASGI_APPLICATION = 'resumeforge.asgi.application'
 
 # Database Configuration (Neon Serverless PostgreSQL & SQLite fallback)
+is_serverless = bool(os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'))
 RAW_DATABASE_URL = env('DATABASE_URL', default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
 DATABASES = {
     'default': dj_database_url.config(
         default=RAW_DATABASE_URL,
-        conn_max_age=600,
-        conn_health_checks=True,
+        conn_max_age=0 if is_serverless else 600,
+        conn_health_checks=not is_serverless,
         ssl_require=bool(RAW_DATABASE_URL.startswith(('postgres://', 'postgresql://'))),
     )
 }
@@ -147,9 +155,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 WHITENOISE_MAX_AGE = 31536000  # 1 year static asset caching for fast load speeds
 WHITENOISE_MANIFEST_STRICT = False
 
-# Media Files (Uploaded Resumes)
+# Media Files (Uploaded Resumes - /tmp writable for Vercel Lambda)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+if is_serverless:
+    MEDIA_ROOT = Path('/tmp') / 'media'
+else:
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

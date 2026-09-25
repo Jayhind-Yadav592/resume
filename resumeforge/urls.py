@@ -34,7 +34,7 @@ from interviews.views import (
 from django.http import HttpResponse
 
 def favicon_view(request):
-    svg = """<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='#2563EB'/><path d='M30 70 L50 30 L70 70 Z' fill='#FFFFFF'/></svg>"""
+    svg = """<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='#4F46E5'/><path d='M30 70 L50 30 L70 70 Z' fill='#FFFFFF'/></svg>"""
     return HttpResponse(svg, content_type="image/svg+xml")
 
 urlpatterns = [
